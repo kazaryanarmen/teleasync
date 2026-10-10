@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teleasync"
+version = "0.1"
+description = "A lightweight, fully typed asynchronous Python library for the Telegram Bot API."
+readme = "README.md"
+requires-python = ">= 3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Armen", email = "kazaryanarmen71@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "httpx==0.28.1",
+]
+
+[project.urls]
+Repository = "https://github.com/kazaryanarmen/teleasync"
+
+[tool.ruff]
+ignore = [
+    "E501",
+    "F401",
+    "F841",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = [
+    "attr-defined",
+    "valid-type"
+]
+
+[tool.ruff.lint]
+ignore = [
+    "E501",
+    "S110",
+    "BLE001",
+    "F401"
+]
