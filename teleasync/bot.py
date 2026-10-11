@@ -89,6 +89,13 @@ class TelegramBot:
         self._client = client
         self._owns_client = client is None
 
+        if len(token) > 10:
+            self.masked_token = f"{token[:6]}...{token[-4:]}"
+        else:
+            self.masked_token = "***"
+            
+        logger.info(f"Initialize Telegram Bot with token: {self.masked_token}")
+
     async def get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(timeout=60.0)
