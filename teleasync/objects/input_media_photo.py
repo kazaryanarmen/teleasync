@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     
+    from .input_file import InputFile
+    
     from .message_entity import MessageEntity
     
 
@@ -11,9 +13,9 @@ if TYPE_CHECKING:
 class InputMediaPhoto:
     """Represents a photo to be sent."""
 
-    def __init__(self, type: str, media: str, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None):
+    def __init__(self, type: str, media: InputFile | str, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None):
         self.type: str = type
-        self.media: str = media
+        self.media: InputFile | str = media
         self.caption: str | None = caption
         self.parse_mode: str | None = parse_mode
         self.caption_entities: list[MessageEntity] | None = caption_entities
@@ -50,13 +52,14 @@ class InputMediaPhoto:
     def from_dict(cls, data: dict | None) -> 'InputMediaPhoto' | None:
         if not data:
             return None
+        from .input_file import InputFile
         from .message_entity import MessageEntity
         return cls(
             type=data.get('type'),
             media=data.get('media'),
             caption=data.get('caption'),
             parse_mode=data.get('parse_mode'),
-            caption_entities=[MessageEntity.from_dict(i) for i in data.get('caption_entities')] if data.get('caption_entities') else None,
+            caption_entities=[MessageEntity.from_dict(i1) for i1 in data.get('caption_entities')] if data.get('caption_entities') else None,
             show_caption_above_media=data.get('show_caption_above_media'),
             has_spoiler=data.get('has_spoiler'),
         )

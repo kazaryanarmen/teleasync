@@ -1,29 +1,24 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
+from importlib import import_module
 
 
 class BackgroundFill:
-    """This object describes the way a background is filled based on the selected colors. Currently, it can be one of - BackgroundFillSolid - BackgroundFillGradient - BackgroundFillFreeformGradient"""
+    """Union-тип. from_dict возвращает нужный подтип по полю 'type'
+    (неизвестное значение -> исходный dict)."""
 
-    def __init__(self):
-        pass
-
-    def to_dict(self) -> dict:
-        def _serialize(v):
-            if hasattr(v, 'to_dict'):
-                return v.to_dict()
-            elif isinstance(v, list):
-                return [_serialize(i) for i in v]
-            elif isinstance(v, dict):
-                return {k: _serialize(val) for k, val in v.items()}
-            return v
-        result = {}
-        return result
+    _DISCRIMINATOR = "type"
+    _SUBTYPES = {
+        "solid": ("background_fill_solid", "BackgroundFillSolid"),
+        "gradient": ("background_fill_gradient", "BackgroundFillGradient"),
+        "freeform_gradient": ("background_fill_freeform_gradient", "BackgroundFillFreeformGradient"),
+    }
 
     @classmethod
-    def from_dict(cls, data: dict | None) -> 'BackgroundFill' | None:
+    def from_dict(cls, data: dict | None):
         if not data:
             return None
-        return cls(
-        )
+        entry = cls._SUBTYPES.get(data.get(cls._DISCRIMINATOR))
+        if entry is None:
+            return data
+        module = import_module("." + entry[0], __package__)
+        return getattr(module, entry[1]).from_dict(data)

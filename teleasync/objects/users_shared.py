@@ -38,5 +38,5 @@ class UsersShared:
         from .shared_user import SharedUser
         return cls(
             request_id=data.get('request_id'),
-            users=[SharedUser.from_dict(i) for i in data.get('users')] if data.get('users') else None,
+            users=[SharedUser.from_dict(i1) for i1 in data.get('users')] if data.get('users') else None,
         )

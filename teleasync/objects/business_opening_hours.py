@@ -38,5 +38,5 @@ class BusinessOpeningHours:
         from .business_opening_hours_interval import BusinessOpeningHoursInterval
         return cls(
             time_zone_name=data.get('time_zone_name'),
-            opening_hours=[BusinessOpeningHoursInterval.from_dict(i) for i in data.get('opening_hours')] if data.get('opening_hours') else None,
+            opening_hours=[BusinessOpeningHoursInterval.from_dict(i1) for i1 in data.get('opening_hours')] if data.get('opening_hours') else None,
         )

@@ -46,7 +46,7 @@ class InputRichBlockListItem:
             return None
         from .input_rich_block import InputRichBlock
         return cls(
-            blocks=[InputRichBlock.from_dict(i) for i in data.get('blocks')] if data.get('blocks') else None,
+            blocks=[InputRichBlock.from_dict(i1) for i1 in data.get('blocks')] if data.get('blocks') else None,
             has_checkbox=data.get('has_checkbox'),
             is_checked=data.get('is_checked'),
             value=data.get('value'),

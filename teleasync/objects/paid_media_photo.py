@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 class PaidMediaPhoto:
     """The paid media is a photo."""
 
-    def __init__(self, type: str, photo_: list[PhotoSize]):
+    def __init__(self, type: str, photo: list[PhotoSize]):
         self.type: str = type
-        self.photo_: list[PhotoSize] = photo_
+        self.photo: list[PhotoSize] = photo
 
     def to_dict(self) -> dict:
         def _serialize(v):
@@ -27,8 +27,8 @@ class PaidMediaPhoto:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
         return result
 
     @classmethod
@@ -38,5 +38,5 @@ class PaidMediaPhoto:
         from .photo_size import PhotoSize
         return cls(
             type=data.get('type'),
-            photo_=[PhotoSize.from_dict(i) for i in data.get('photo')] if data.get('photo') else None,
+            photo=[PhotoSize.from_dict(i1) for i1 in data.get('photo')] if data.get('photo') else None,
         )

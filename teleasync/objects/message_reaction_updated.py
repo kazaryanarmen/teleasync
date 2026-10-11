@@ -61,8 +61,8 @@ class MessageReactionUpdated:
             chat=Chat.from_dict(data.get('chat')),
             message_id=data.get('message_id'),
             date=data.get('date'),
-            old_reaction=[ReactionType.from_dict(i) for i in data.get('old_reaction')] if data.get('old_reaction') else None,
-            new_reaction=[ReactionType.from_dict(i) for i in data.get('new_reaction')] if data.get('new_reaction') else None,
+            old_reaction=[ReactionType.from_dict(i1) for i1 in data.get('old_reaction')] if data.get('old_reaction') else None,
+            new_reaction=[ReactionType.from_dict(i1) for i1 in data.get('new_reaction')] if data.get('new_reaction') else None,
             user=User.from_dict(data.get('user')),
             actor_chat=Chat.from_dict(data.get('actor_chat')),
         )

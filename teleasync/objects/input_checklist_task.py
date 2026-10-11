@@ -46,5 +46,5 @@ class InputChecklistTask:
             id=data.get('id'),
             text=data.get('text'),
             parse_mode=data.get('parse_mode'),
-            text_entities=[MessageEntity.from_dict(i) for i in data.get('text_entities')] if data.get('text_entities') else None,
+            text_entities=[MessageEntity.from_dict(i1) for i1 in data.get('text_entities')] if data.get('text_entities') else None,
         )

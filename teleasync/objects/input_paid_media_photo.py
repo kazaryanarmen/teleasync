@@ -2,13 +2,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 
+if TYPE_CHECKING:
+    
+    from .input_file import InputFile
+    
+
 
 class InputPaidMediaPhoto:
     """The paid media to send is a photo."""
 
-    def __init__(self, type: str, media: str):
+    def __init__(self, type: str, media: InputFile | str):
         self.type: str = type
-        self.media: str = media
+        self.media: InputFile | str = media
 
     def to_dict(self) -> dict:
         def _serialize(v):
@@ -30,6 +35,7 @@ class InputPaidMediaPhoto:
     def from_dict(cls, data: dict | None) -> 'InputPaidMediaPhoto' | None:
         if not data:
             return None
+        from .input_file import InputFile
         return cls(
             type=data.get('type'),
             media=data.get('media'),

@@ -2,13 +2,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 
+if TYPE_CHECKING:
+    
+    from .input_file import InputFile
+    
+
 
 class InputMediaSticker:
     """Represents a sticker file to be sent."""
 
-    def __init__(self, type: str, media: str, emoji: str | None = None):
+    def __init__(self, type: str, media: InputFile | str, emoji: str | None = None):
         self.type: str = type
-        self.media: str = media
+        self.media: InputFile | str = media
         self.emoji: str | None = emoji
 
     def to_dict(self) -> dict:
@@ -33,6 +38,7 @@ class InputMediaSticker:
     def from_dict(cls, data: dict | None) -> 'InputMediaSticker' | None:
         if not data:
             return None
+        from .input_file import InputFile
         return cls(
             type=data.get('type'),
             media=data.get('media'),

@@ -1,224 +1,186 @@
-from .objects.update import Update
+from __future__ import annotations
 import asyncio
 import inspect
+import json
+import logging
+import re
+
+from .objects.update import Update
+
+logger = logging.getLogger("teleasync.router")
+
+UPDATE_EVENTS = (
+    "message", "edited_message", "channel_post", "edited_channel_post",
+    "business_connection", "business_message", "edited_business_message",
+    "deleted_business_messages", "guest_message", "message_reaction",
+    "message_reaction_count", "inline_query", "chosen_inline_result",
+    "callback_query", "shipping_query", "pre_checkout_query",
+    "purchased_paid_media", "poll", "poll_answer", "my_chat_member",
+    "chat_member", "chat_join_request", "chat_boost", "removed_chat_boost",
+    "managed_bot", "subscription", "stopped_message_generation",
+)
+# События, чей объект — Message (для них доступны фильтры сообщений)
+MESSAGE_EVENTS = {
+    "message", "edited_message", "channel_post", "edited_channel_post",
+    "business_message", "edited_business_message", "guest_message",
+    "successful_payment",
+}
+
+
+def _as_list(value) -> list:
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple, set)):
+        return list(value)
+    return [value]
+
+
+def _is_async(handler) -> bool:
+    return (inspect.iscoroutinefunction(handler)
+            or inspect.iscoroutinefunction(getattr(handler, "__call__", None)))
+
+
+async def _run_handler(handler, *args, **kwargs):
+    """async-хендлеры выполняются в цикле, обычные — в потоке (не блокируют бота).
+    Обычный хендлер не должен обращаться к event loop (await, create_task)."""
+    if _is_async(handler):
+        return await handler(*args, **kwargs)
+    result = await asyncio.to_thread(handler, *args, **kwargs)
+    if inspect.isawaitable(result):
+        result = await result
+    return result
+
+
+def _message_filter(*, content_types=None, text=None, startswith=None, regex=None,
+                    chat_types=None, ignore_commands=False):
+    types = _as_list(content_types)
+    texts = _as_list(text)
+    prefixes = tuple(_as_list(startswith))
+    chats = _as_list(chat_types)
+    pattern = re.compile(regex) if isinstance(regex, str) else regex
+
+    def check(m) -> bool:
+        if chats and getattr(getattr(m, "chat", None), "type", None) not in chats:
+            return False
+        if types and not any(getattr(m, t, None) for t in types):
+            return False
+        body = getattr(m, "text", None) or getattr(m, "caption", None) or ""
+        if ignore_commands and body.startswith("/"):
+            return False
+        if texts and getattr(m, "text", None) not in texts:
+            return False
+        if prefixes and not (getattr(m, "text", None) or "").startswith(prefixes):
+            return False
+        if pattern and not pattern.search(body):
+            return False
+        return True
+
+    return check
+
+
+def _callback_filter(*, data=None, startswith=None, regex=None):
+    datas = _as_list(data)
+    prefixes = tuple(_as_list(startswith))
+    pattern = re.compile(regex) if isinstance(regex, str) else regex
+
+    def check(q) -> bool:
+        value = getattr(q, "data", None) or ""
+        if datas and value not in datas:
+            return False
+        if prefixes and not value.startswith(prefixes):
+            return False
+        if pattern and not pattern.search(value):
+            return False
+        return True
+
+    return check
+
 
 class EventRouter:
+    """Фильтры (все необязательные, комбинируются через И):
+
+    @router.message(content_types=["photo"], chat_types="private")
+    @router.message(text="привет")  /  startswith="!"  /  regex=r"^\\d+$"  /  ignore_commands=True
+    @router.callback_query(data="ping")  /  startswith="page:"  /  regex=...
+    @router.command("start", chat_types="private")
+    Любой декоратор принимает func=<предикат(obj) -> bool>.
+    """
+
     def __init__(self):
-        self.message_handlers = []
-        self.command_handlers = {}
-        self.edited_message_handlers = []
-        self.channel_post_handlers = []
-        self.edited_channel_post_handlers = []
-        self.business_connection_handlers = []
-        self.business_message_handlers = []
-        self.edited_business_message_handlers = []
-        self.deleted_business_messages_handlers = []
-        self.guest_message_handlers = []
-        self.message_reaction_handlers = []
-        self.message_reaction_count_handlers = []
-        self.inline_query_handlers = []
-        self.chosen_inline_result_handlers = []
-        self.callback_query_handlers = []
-        self.shipping_query_handlers = []
-        self.pre_checkout_query_handlers = []
-        self.successful_payment_handlers = []
-        self.purchased_paid_media_handlers = []
-        self.poll_handlers = []
-        self.poll_answer_handlers = []
-        self.my_chat_member_handlers = []
-        self.chat_member_handlers = []
-        self.chat_join_request_handlers = []
-        self.chat_boost_handlers = []
-        self.removed_chat_boost_handlers = []
-        self.managed_bot_handlers = []
-        self.subscription_handlers = []
-        self.stopped_message_generation_handlers = []
+        self._handlers: dict[str, list] = {ev: [] for ev in UPDATE_EVENTS}
+        self._handlers["successful_payment"] = []
+        self.command_handlers: dict[str, list] = {}
 
-    def message(self):
-        def decorator(func):
-            self.message_handlers.append(func)
-            return func
+    # ---------- регистрация ----------
+    @staticmethod
+    def _build_checks(builder, filters: dict) -> list:
+        filters = dict(filters)
+        predicate = filters.pop("func", None)
+        checks = []
+        if filters:
+            if builder is None:
+                raise TypeError(f"Для этого события нет фильтров: {sorted(filters)}")
+            checks.append(builder(**filters))
+        if predicate is not None:
+            checks.append(predicate)
+        return checks
+
+    @staticmethod
+    def _wrap(handler, checks: list):
+        if not checks:
+            return handler
+
+        async def wrapper(obj, *args, **kwargs):
+            for check in checks:
+                result = check(obj)
+                if inspect.isawaitable(result):
+                    result = await result
+                if not result:
+                    return None
+            return await _run_handler(handler, obj, *args, **kwargs)
+
+        wrapper.__name__ = getattr(handler, "__name__", "handler")
+        return wrapper
+
+    def _make_decorator(self, event: str, builder, filters: dict):
+        checks = self._build_checks(builder, filters)
+
+        def decorator(handler):
+            self._handlers[event].append(self._wrap(handler, checks))
+            return handler
         return decorator
 
-    def command(self, commands: str | list[str]):
-        if isinstance(commands, str):
-            commands = [commands]
-        def decorator(func):
-            for cmd in commands:
-                cmd = cmd.lstrip('/').lower()
-                if cmd not in self.command_handlers:
-                    self.command_handlers[cmd] = []
-                self.command_handlers[cmd].append(func)
-            return func
+    def command(self, commands: str | list[str], **filters):
+        names = [c.lstrip("/").lower() for c in _as_list(commands)]
+        checks = self._build_checks(_message_filter, filters)
+
+        def decorator(handler):
+            wrapped = self._wrap(handler, checks)
+            for name in names:
+                self.command_handlers.setdefault(name, []).append(wrapped)
+            return handler
         return decorator
 
-    def edited_message(self):
-        def decorator(func):
-            self.edited_message_handlers.append(func)
-            return func
-        return decorator
-
-    def channel_post(self):
-        def decorator(func):
-            self.channel_post_handlers.append(func)
-            return func
-        return decorator
-
-    def edited_channel_post(self):
-        def decorator(func):
-            self.edited_channel_post_handlers.append(func)
-            return func
-        return decorator
-
-    def business_connection(self):
-        def decorator(func):
-            self.business_connection_handlers.append(func)
-            return func
-        return decorator
-
-    def business_message(self):
-        def decorator(func):
-            self.business_message_handlers.append(func)
-            return func
-        return decorator
-
-    def edited_business_message(self):
-        def decorator(func):
-            self.edited_business_message_handlers.append(func)
-            return func
-        return decorator
-
-    def deleted_business_messages(self):
-        def decorator(func):
-            self.deleted_business_messages_handlers.append(func)
-            return func
-        return decorator
-
-    def guest_message(self):
-        def decorator(func):
-            self.guest_message_handlers.append(func)
-            return func
-        return decorator
-
-    def message_reaction(self):
-        def decorator(func):
-            self.message_reaction_handlers.append(func)
-            return func
-        return decorator
-
-    def message_reaction_count(self):
-        def decorator(func):
-            self.message_reaction_count_handlers.append(func)
-            return func
-        return decorator
-
-    def inline_query(self):
-        def decorator(func):
-            self.inline_query_handlers.append(func)
-            return func
-        return decorator
-
-    def chosen_inline_result(self):
-        def decorator(func):
-            self.chosen_inline_result_handlers.append(func)
-            return func
-        return decorator
-
-    def callback_query(self):
-        def decorator(func):
-            self.callback_query_handlers.append(func)
-            return func
-        return decorator
-
-    def shipping_query(self):
-        def decorator(func):
-            self.shipping_query_handlers.append(func)
-            return func
-        return decorator
-
-    def pre_checkout_query(self):
-        def decorator(func):
-            self.pre_checkout_query_handlers.append(func)
-            return func
-        return decorator
-
-    def successful_payment(self):
-        def decorator(func):
-            self.successful_payment_handlers.append(func)
-            return func
-        return decorator
-
-    def purchased_paid_media(self):
-        def decorator(func):
-            self.purchased_paid_media_handlers.append(func)
-            return func
-        return decorator
-
-    def poll(self):
-        def decorator(func):
-            self.poll_handlers.append(func)
-            return func
-        return decorator
-
-    def poll_answer(self):
-        def decorator(func):
-            self.poll_answer_handlers.append(func)
-            return func
-        return decorator
-
-    def my_chat_member(self):
-        def decorator(func):
-            self.my_chat_member_handlers.append(func)
-            return func
-        return decorator
-
-    def chat_member(self):
-        def decorator(func):
-            self.chat_member_handlers.append(func)
-            return func
-        return decorator
-
-    def chat_join_request(self):
-        def decorator(func):
-            self.chat_join_request_handlers.append(func)
-            return func
-        return decorator
-
-    def chat_boost(self):
-        def decorator(func):
-            self.chat_boost_handlers.append(func)
-            return func
-        return decorator
-
-    def removed_chat_boost(self):
-        def decorator(func):
-            self.removed_chat_boost_handlers.append(func)
-            return func
-        return decorator
-
-    def managed_bot(self):
-        def decorator(func):
-            self.managed_bot_handlers.append(func)
-            return func
-        return decorator
-
-    def subscription(self):
-        def decorator(func):
-            self.subscription_handlers.append(func)
-            return func
-        return decorator
-
-    def stopped_message_generation(self):
-        def decorator(func):
-            self.stopped_message_generation_handlers.append(func)
-            return func
-        return decorator
-
+    # ---------- выполнение ----------
     async def _execute_handler(self, handler, *args, **kwargs):
-        if inspect.iscoroutinefunction(handler):
-            return await handler(*args, **kwargs)
-        else:
-            return handler(*args, **kwargs)
+        try:
+            return await _run_handler(handler, *args, **kwargs)
+        except Exception:
+            logger.exception("Handler %s failed", getattr(handler, "__name__", repr(handler)))
+
+    async def _handle_message(self, message) -> None:
+        text = getattr(message, "text", None) or getattr(message, "caption", None) or ""
+        if text.startswith("/"):
+            name = text.split(maxsplit=1)[0][1:].lower().split("@")[0]
+            for handler in list(self.command_handlers.get(name, [])):
+                await self._execute_handler(handler, message)
+
+        for handler in list(self._handlers["message"]):
+            await self._execute_handler(handler, message)
+
+        if getattr(message, "successful_payment", None):
+            for handler in list(self._handlers["successful_payment"]):
+                await self._execute_handler(handler, message)
 
     async def feed(self, update_data: dict | str | list) -> None:
         if isinstance(update_data, list):
@@ -227,105 +189,39 @@ class EventRouter:
             return
 
         if isinstance(update_data, str):
-            import json
             update_data = json.loads(update_data)
-            
+
         update = Update.from_dict(update_data)
         if not update:
             return
 
         if update.message:
-            message_text = update.message.text or update.message.caption or ""
-            if message_text.startswith('/'):
-                parts = message_text.split(maxsplit=1)
-                cmd_name = parts[0][1:].lower()
-                if '@' in cmd_name:
-                    cmd_name = cmd_name.split('@')[0]
-                if cmd_name in self.command_handlers:
-                    for handler in self.command_handlers[cmd_name]:
-                        await self._execute_handler(handler, update.message)
-            
-            for handler in self.message_handlers:
-                await self._execute_handler(handler, update.message)
-                
-        if update.edited_message:
-            for handler in self.edited_message_handlers:
-                await self._execute_handler(handler, update.edited_message)
-        if update.channel_post:
-            for handler in self.channel_post_handlers:
-                await self._execute_handler(handler, update.channel_post)
-        if update.edited_channel_post:
-            for handler in self.edited_channel_post_handlers:
-                await self._execute_handler(handler, update.edited_channel_post)
-        if update.business_connection:
-            for handler in self.business_connection_handlers:
-                await self._execute_handler(handler, update.business_connection)
-        if update.business_message:
-            for handler in self.business_message_handlers:
-                await self._execute_handler(handler, update.business_message)
-        if update.edited_business_message:
-            for handler in self.edited_business_message_handlers:
-                await self._execute_handler(handler, update.edited_business_message)
-        if update.deleted_business_messages:
-            for handler in self.deleted_business_messages_handlers:
-                await self._execute_handler(handler, update.deleted_business_messages)
-        if update.guest_message:
-            for handler in self.guest_message_handlers:
-                await self._execute_handler(handler, update.guest_message)
-        if update.message_reaction:
-            for handler in self.message_reaction_handlers:
-                await self._execute_handler(handler, update.message_reaction)
-        if update.message_reaction_count:
-            for handler in self.message_reaction_count_handlers:
-                await self._execute_handler(handler, update.message_reaction_count)
-        if update.inline_query:
-            for handler in self.inline_query_handlers:
-                await self._execute_handler(handler, update.inline_query)
-        if update.chosen_inline_result:
-            for handler in self.chosen_inline_result_handlers:
-                await self._execute_handler(handler, update.chosen_inline_result)
-        if update.callback_query:
-            for handler in self.callback_query_handlers:
-                await self._execute_handler(handler, update.callback_query)
-        if update.shipping_query:
-            for handler in self.shipping_query_handlers:
-                await self._execute_handler(handler, update.shipping_query)
-        if update.pre_checkout_query:
-            for handler in self.pre_checkout_query_handlers:
-                await self._execute_handler(handler, update.pre_checkout_query)
-        if update.message.successful_payment:
-            for handler in self.successful_payment_handlers:
-                await self._execute_handler(handler, update.successful_payment)
-        if update.purchased_paid_media:
-            for handler in self.purchased_paid_media_handlers:
-                await self._execute_handler(handler, update.purchased_paid_media)
-        if update.poll:
-            for handler in self.poll_handlers:
-                await self._execute_handler(handler, update.poll)
-        if update.poll_answer:
-            for handler in self.poll_answer_handlers:
-                await self._execute_handler(handler, update.poll_answer)
-        if update.my_chat_member:
-            for handler in self.my_chat_member_handlers:
-                await self._execute_handler(handler, update.my_chat_member)
-        if update.chat_member:
-            for handler in self.chat_member_handlers:
-                await self._execute_handler(handler, update.chat_member)
-        if update.chat_join_request:
-            for handler in self.chat_join_request_handlers:
-                await self._execute_handler(handler, update.chat_join_request)
-        if update.chat_boost:
-            for handler in self.chat_boost_handlers:
-                await self._execute_handler(handler, update.chat_boost)
-        if update.removed_chat_boost:
-            for handler in self.removed_chat_boost_handlers:
-                await self._execute_handler(handler, update.removed_chat_boost)
-        if update.managed_bot:
-            for handler in self.managed_bot_handlers:
-                await self._execute_handler(handler, update.managed_bot)
-        if update.subscription:
-            for handler in self.subscription_handlers:
-                await self._execute_handler(handler, update.subscription)
-        if update.stopped_message_generation:
-            for handler in self.stopped_message_generation_handlers:
-                await self._execute_handler(handler, update.stopped_message_generation)
+            await self._handle_message(update.message)
+
+        for event in UPDATE_EVENTS:
+            if event == "message":
+                continue
+            obj = getattr(update, event, None)
+            if obj:
+                for handler in list(self._handlers[event]):
+                    await self._execute_handler(handler, obj)
+
+
+def _make_event_decorator(event: str):
+    if event in MESSAGE_EVENTS:
+        builder = _message_filter
+    elif event == "callback_query":
+        builder = _callback_filter
+    else:
+        builder = None
+
+    def method(self, **filters):
+        return self._make_decorator(event, builder, filters)
+
+    method.__name__ = event
+    method.__doc__ = f"Регистрирует хендлер события '{event}'."
+    return method
+
+
+for _event in UPDATE_EVENTS + ("successful_payment",):
+    setattr(EventRouter, _event, _make_event_decorator(_event))

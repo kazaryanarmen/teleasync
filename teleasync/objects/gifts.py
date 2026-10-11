@@ -34,5 +34,5 @@ class Gifts:
             return None
         from .gift import Gift
         return cls(
-            gifts=[Gift.from_dict(i) for i in data.get('gifts')] if data.get('gifts') else None,
+            gifts=[Gift.from_dict(i1) for i1 in data.get('gifts')] if data.get('gifts') else None,
         )

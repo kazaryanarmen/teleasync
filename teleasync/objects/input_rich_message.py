@@ -52,10 +52,10 @@ class InputRichMessage:
         from .input_rich_block import InputRichBlock
         from .input_rich_message_media import InputRichMessageMedia
         return cls(
-            blocks=[InputRichBlock.from_dict(i) for i in data.get('blocks')] if data.get('blocks') else None,
+            blocks=[InputRichBlock.from_dict(i1) for i1 in data.get('blocks')] if data.get('blocks') else None,
             html=data.get('html'),
             markdown=data.get('markdown'),
-            media=[InputRichMessageMedia.from_dict(i) for i in data.get('media')] if data.get('media') else None,
+            media=[InputRichMessageMedia.from_dict(i1) for i1 in data.get('media')] if data.get('media') else None,
             is_rtl=data.get('is_rtl'),
             skip_entity_detection=data.get('skip_entity_detection'),
         )

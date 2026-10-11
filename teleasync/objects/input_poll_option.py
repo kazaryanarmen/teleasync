@@ -48,6 +48,6 @@ class InputPollOption:
         return cls(
             text=data.get('text'),
             text_parse_mode=data.get('text_parse_mode'),
-            text_entities=[MessageEntity.from_dict(i) for i in data.get('text_entities')] if data.get('text_entities') else None,
+            text_entities=[MessageEntity.from_dict(i1) for i1 in data.get('text_entities')] if data.get('text_entities') else None,
             media=InputPollOptionMedia.from_dict(data.get('media')),
         )

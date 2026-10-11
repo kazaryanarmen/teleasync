@@ -38,5 +38,5 @@ class InputRichBlockList:
         from .input_rich_block_list_item import InputRichBlockListItem
         return cls(
             type=data.get('type'),
-            items=[InputRichBlockListItem.from_dict(i) for i in data.get('items')] if data.get('items') else None,
+            items=[InputRichBlockListItem.from_dict(i1) for i1 in data.get('items')] if data.get('items') else None,
         )

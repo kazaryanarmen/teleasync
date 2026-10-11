@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     
+    from .input_file import InputFile
+    
     from .message_entity import MessageEntity
     
 
@@ -11,11 +13,11 @@ if TYPE_CHECKING:
 class InputMediaVideo:
     """Represents a video to be sent."""
 
-    def __init__(self, type: str, media: str, thumbnail: str | None = None, cover: str | None = None, start_timestamp: int | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, width: int | None = None, height: int | None = None, duration: int | None = None, supports_streaming: bool | None = None, has_spoiler: bool | None = None):
+    def __init__(self, type: str, media: InputFile | str, thumbnail: InputFile | str | None = None, cover: InputFile | str | None = None, start_timestamp: int | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, width: int | None = None, height: int | None = None, duration: int | None = None, supports_streaming: bool | None = None, has_spoiler: bool | None = None):
         self.type: str = type
-        self.media: str = media
-        self.thumbnail: str | None = thumbnail
-        self.cover: str | None = cover
+        self.media: InputFile | str = media
+        self.thumbnail: InputFile | str | None = thumbnail
+        self.cover: InputFile | str | None = cover
         self.start_timestamp: int | None = start_timestamp
         self.caption: str | None = caption
         self.parse_mode: str | None = parse_mode
@@ -71,6 +73,7 @@ class InputMediaVideo:
     def from_dict(cls, data: dict | None) -> 'InputMediaVideo' | None:
         if not data:
             return None
+        from .input_file import InputFile
         from .message_entity import MessageEntity
         return cls(
             type=data.get('type'),
@@ -80,7 +83,7 @@ class InputMediaVideo:
             start_timestamp=data.get('start_timestamp'),
             caption=data.get('caption'),
             parse_mode=data.get('parse_mode'),
-            caption_entities=[MessageEntity.from_dict(i) for i in data.get('caption_entities')] if data.get('caption_entities') else None,
+            caption_entities=[MessageEntity.from_dict(i1) for i1 in data.get('caption_entities')] if data.get('caption_entities') else None,
             show_caption_above_media=data.get('show_caption_above_media'),
             width=data.get('width'),
             height=data.get('height'),

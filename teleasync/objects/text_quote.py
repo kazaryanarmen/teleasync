@@ -45,6 +45,6 @@ class TextQuote:
         return cls(
             text=data.get('text'),
             position=data.get('position'),
-            entities=[MessageEntity.from_dict(i) for i in data.get('entities')] if data.get('entities') else None,
+            entities=[MessageEntity.from_dict(i1) for i1 in data.get('entities')] if data.get('entities') else None,
             is_manual=data.get('is_manual'),
         )

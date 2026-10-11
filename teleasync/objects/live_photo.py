@@ -11,13 +11,13 @@ if TYPE_CHECKING:
 class LivePhoto:
     """This object represents a live photo."""
 
-    def __init__(self, file_id: str, file_unique_id: str, width: int, height: int, duration: int, photo_: list[PhotoSize] | None = None, mime_type: str | None = None, file_size: int | None = None):
+    def __init__(self, file_id: str, file_unique_id: str, width: int, height: int, duration: int, photo: list[PhotoSize] | None = None, mime_type: str | None = None, file_size: int | None = None):
         self.file_id: str = file_id
         self.file_unique_id: str = file_unique_id
         self.width: int = width
         self.height: int = height
         self.duration: int = duration
-        self.photo_: list[PhotoSize] | None = photo_
+        self.photo: list[PhotoSize] | None = photo
         self.mime_type: str | None = mime_type
         self.file_size: int | None = file_size
 
@@ -41,8 +41,8 @@ class LivePhoto:
             result['height'] = _serialize(self.height)
         if self.duration is not None:
             result['duration'] = _serialize(self.duration)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
         if self.mime_type is not None:
             result['mime_type'] = _serialize(self.mime_type)
         if self.file_size is not None:
@@ -60,7 +60,7 @@ class LivePhoto:
             width=data.get('width'),
             height=data.get('height'),
             duration=data.get('duration'),
-            photo_=[PhotoSize.from_dict(i) for i in data.get('photo')] if data.get('photo') else None,
+            photo=[PhotoSize.from_dict(i1) for i1 in data.get('photo')] if data.get('photo') else None,
             mime_type=data.get('mime_type'),
             file_size=data.get('file_size'),
         )

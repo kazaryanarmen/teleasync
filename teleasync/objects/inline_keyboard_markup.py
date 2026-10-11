@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 class InlineKeyboardMarkup:
     """This object represents an inline keyboard that appears right next to the message it belongs to."""
 
-    def __init__(self, inline_keyboard: list[InlineKeyboardButton], force_reply: bool | None = None):
-        self.inline_keyboard: list[InlineKeyboardButton] = inline_keyboard
+    def __init__(self, inline_keyboard: list[list[InlineKeyboardButton]], force_reply: bool | None = None):
+        self.inline_keyboard: list[list[InlineKeyboardButton]] = inline_keyboard
         self.force_reply: bool | None = force_reply
 
     def to_dict(self) -> dict:
@@ -37,6 +37,6 @@ class InlineKeyboardMarkup:
             return None
         from .inline_keyboard_button import InlineKeyboardButton
         return cls(
-            inline_keyboard=[InlineKeyboardButton.from_dict(i) for i in data.get('inline_keyboard')] if data.get('inline_keyboard') else None,
+            inline_keyboard=[[InlineKeyboardButton.from_dict(i1) for i1 in i2] for i2 in data.get('inline_keyboard')] if data.get('inline_keyboard') else None,
             force_reply=data.get('force_reply'),
         )

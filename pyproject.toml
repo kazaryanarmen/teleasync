@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "teleasync"
-version = "0.1.1"
+version = "0.2"
 description = "A lightweight, fully typed asynchronous Python library for the Telegram Bot API."
 readme = "README.md"
 requires-python = ">= 3.10"
@@ -46,3 +46,6 @@ ignore = [
     "BLE001",
     "F401"
 ]
+
+[tool.setuptools]
+packages = ["teleasync"]

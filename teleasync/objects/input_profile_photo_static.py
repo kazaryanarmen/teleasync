@@ -2,13 +2,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 
+if TYPE_CHECKING:
+    
+    from .input_file import InputFile
+    
+
 
 class InputProfilePhotoStatic:
     """A static profile photo in the .JPG format."""
 
-    def __init__(self, type: str, photo_: str):
+    def __init__(self, type: str, photo: InputFile | str):
         self.type: str = type
-        self.photo_: str = photo_
+        self.photo: InputFile | str = photo
 
     def to_dict(self) -> dict:
         def _serialize(v):
@@ -22,15 +27,16 @@ class InputProfilePhotoStatic:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
         return result
 
     @classmethod
     def from_dict(cls, data: dict | None) -> 'InputProfilePhotoStatic' | None:
         if not data:
             return None
+        from .input_file import InputFile
         return cls(
             type=data.get('type'),
-            photo_=data.get('photo'),
+            photo=data.get('photo'),
         )

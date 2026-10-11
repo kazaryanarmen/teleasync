@@ -41,6 +41,6 @@ class OwnedGifts:
         from .owned_gift import OwnedGift
         return cls(
             total_count=data.get('total_count'),
-            gifts=[OwnedGift.from_dict(i) for i in data.get('gifts')] if data.get('gifts') else None,
+            gifts=[OwnedGift.from_dict(i1) for i1 in data.get('gifts')] if data.get('gifts') else None,
             next_offset=data.get('next_offset'),
         )

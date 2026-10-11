@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 class ChatFullInfo:
     """This object contains full information about a chat."""
 
-    def __init__(self, id: int, type: str, accent_color_id: int, max_reaction_count: int, accepted_gift_types: AcceptedGiftTypes, title: str | None = None, username: str | None = None, first_name: str | None = None, last_name: str | None = None, is_forum: bool | None = None, is_direct_messages: bool | None = None, photo_: ChatPhoto | None = None, active_usernames: list[str] | None = None, birthdate: Birthdate | None = None, business_intro: BusinessIntro | None = None, business_location: BusinessLocation | None = None, business_opening_hours: BusinessOpeningHours | None = None, personal_chat: Chat | None = None, parent_chat: Chat | None = None, available_reactions: list[ReactionType] | None = None, background_custom_emoji_id: str | None = None, profile_accent_color_id: int | None = None, profile_background_custom_emoji_id: str | None = None, emoji_status_custom_emoji_id: str | None = None, emoji_status_expiration_date: int | None = None, bio: str | None = None, has_private_forwards: bool | None = None, has_restricted_voice_and_video_messages: bool | None = None, join_to_send_messages: bool | None = None, join_by_request: bool | None = None, description: str | None = None, invite_link: str | None = None, pinned_message: Message | None = None, permissions: ChatPermissions | None = None, can_send_paid_media: bool | None = None, slow_mode_delay: int | None = None, unrestrict_boost_count: int | None = None, message_auto_delete_time: int | None = None, has_aggressive_anti_spam_enabled: bool | None = None, has_hidden_members: bool | None = None, has_protected_content: bool | None = None, has_visible_history: bool | None = None, sticker_set_name: str | None = None, can_set_sticker_set: bool | None = None, custom_emoji_sticker_set_name: str | None = None, linked_chat_id: int | None = None, location: ChatLocation | None = None, rating: UserRating | None = None, first_profile_audio: Audio | None = None, unique_gift_colors: UniqueGiftColors | None = None, paid_message_star_count: int | None = None, guard_bot: User | None = None, community: Community | None = None):
+    def __init__(self, id: int, type: str, accent_color_id: int, max_reaction_count: int, accepted_gift_types: AcceptedGiftTypes, title: str | None = None, username: str | None = None, first_name: str | None = None, last_name: str | None = None, is_forum: bool | None = None, is_direct_messages: bool | None = None, photo: ChatPhoto | None = None, active_usernames: list[str] | None = None, birthdate: Birthdate | None = None, business_intro: BusinessIntro | None = None, business_location: BusinessLocation | None = None, business_opening_hours: BusinessOpeningHours | None = None, personal_chat: Chat | None = None, parent_chat: Chat | None = None, available_reactions: list[ReactionType] | None = None, background_custom_emoji_id: str | None = None, profile_accent_color_id: int | None = None, profile_background_custom_emoji_id: str | None = None, emoji_status_custom_emoji_id: str | None = None, emoji_status_expiration_date: int | None = None, bio: str | None = None, has_private_forwards: bool | None = None, has_restricted_voice_and_video_messages: bool | None = None, join_to_send_messages: bool | None = None, join_by_request: bool | None = None, description: str | None = None, invite_link: str | None = None, pinned_message: Message | None = None, permissions: ChatPermissions | None = None, can_send_paid_media: bool | None = None, slow_mode_delay: int | None = None, unrestrict_boost_count: int | None = None, message_auto_delete_time: int | None = None, has_aggressive_anti_spam_enabled: bool | None = None, has_hidden_members: bool | None = None, has_protected_content: bool | None = None, has_visible_history: bool | None = None, sticker_set_name: str | None = None, can_set_sticker_set: bool | None = None, custom_emoji_sticker_set_name: str | None = None, linked_chat_id: int | None = None, location: ChatLocation | None = None, rating: UserRating | None = None, first_profile_audio: Audio | None = None, unique_gift_colors: UniqueGiftColors | None = None, paid_message_star_count: int | None = None, guard_bot: User | None = None, community: Community | None = None):
         self.id: int = id
         self.type: str = type
         self.accent_color_id: int = accent_color_id
@@ -53,7 +53,7 @@ class ChatFullInfo:
         self.last_name: str | None = last_name
         self.is_forum: bool | None = is_forum
         self.is_direct_messages: bool | None = is_direct_messages
-        self.photo_: ChatPhoto | None = photo_
+        self.photo: ChatPhoto | None = photo
         self.active_usernames: list[str] | None = active_usernames
         self.birthdate: Birthdate | None = birthdate
         self.business_intro: BusinessIntro | None = business_intro
@@ -128,8 +128,8 @@ class ChatFullInfo:
             result['is_forum'] = _serialize(self.is_forum)
         if self.is_direct_messages is not None:
             result['is_direct_messages'] = _serialize(self.is_direct_messages)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
         if self.active_usernames is not None:
             result['active_usernames'] = _serialize(self.active_usernames)
         if self.birthdate is not None:
@@ -246,7 +246,7 @@ class ChatFullInfo:
             last_name=data.get('last_name'),
             is_forum=data.get('is_forum'),
             is_direct_messages=data.get('is_direct_messages'),
-            photo_=ChatPhoto.from_dict(data.get('photo')),
+            photo=ChatPhoto.from_dict(data.get('photo')),
             active_usernames=data.get('active_usernames'),
             birthdate=Birthdate.from_dict(data.get('birthdate')),
             business_intro=BusinessIntro.from_dict(data.get('business_intro')),
@@ -254,7 +254,7 @@ class ChatFullInfo:
             business_opening_hours=BusinessOpeningHours.from_dict(data.get('business_opening_hours')),
             personal_chat=Chat.from_dict(data.get('personal_chat')),
             parent_chat=Chat.from_dict(data.get('parent_chat')),
-            available_reactions=[ReactionType.from_dict(i) for i in data.get('available_reactions')] if data.get('available_reactions') else None,
+            available_reactions=[ReactionType.from_dict(i1) for i1 in data.get('available_reactions')] if data.get('available_reactions') else None,
             background_custom_emoji_id=data.get('background_custom_emoji_id'),
             profile_accent_color_id=data.get('profile_accent_color_id'),
             profile_background_custom_emoji_id=data.get('profile_background_custom_emoji_id'),

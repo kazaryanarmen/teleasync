@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 class BackgroundTypePattern:
     """The background is a .PNG or .TGV (gzipped subset of SVG with MIME type "application/x-tgwallpattern") pattern to be combined with the background fill chosen by the user."""
 
-    def __init__(self, type: str, document_: Document, fill: BackgroundFill, intensity: int, is_inverted: bool | None = None, is_moving: bool | None = None):
+    def __init__(self, type: str, document: Document, fill: BackgroundFill, intensity: int, is_inverted: bool | None = None, is_moving: bool | None = None):
         self.type: str = type
-        self.document_: Document = document_
+        self.document: Document = document
         self.fill: BackgroundFill = fill
         self.intensity: int = intensity
         self.is_inverted: bool | None = is_inverted
@@ -33,8 +33,8 @@ class BackgroundTypePattern:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.document_ is not None:
-            result['document'] = _serialize(self.document_)
+        if self.document is not None:
+            result['document'] = _serialize(self.document)
         if self.fill is not None:
             result['fill'] = _serialize(self.fill)
         if self.intensity is not None:
@@ -53,7 +53,7 @@ class BackgroundTypePattern:
         from .document import Document
         return cls(
             type=data.get('type'),
-            document_=Document.from_dict(data.get('document')),
+            document=Document.from_dict(data.get('document')),
             fill=BackgroundFill.from_dict(data.get('fill')),
             intensity=data.get('intensity'),
             is_inverted=data.get('is_inverted'),

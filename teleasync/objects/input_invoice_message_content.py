@@ -95,7 +95,7 @@ class InputInvoiceMessageContent:
             description=data.get('description'),
             payload=data.get('payload'),
             currency=data.get('currency'),
-            prices=[LabeledPrice.from_dict(i) for i in data.get('prices')] if data.get('prices') else None,
+            prices=[LabeledPrice.from_dict(i1) for i1 in data.get('prices')] if data.get('prices') else None,
             provider_token=data.get('provider_token'),
             max_tip_amount=data.get('max_tip_amount'),
             suggested_tip_amounts=data.get('suggested_tip_amounts'),

@@ -34,5 +34,5 @@ class VideoChatParticipantsInvited:
             return None
         from .user import User
         return cls(
-            users=[User.from_dict(i) for i in data.get('users')] if data.get('users') else None,
+            users=[User.from_dict(i1) for i1 in data.get('users')] if data.get('users') else None,
         )

@@ -49,5 +49,5 @@ class PollOptionAdded:
             option_persistent_id=data.get('option_persistent_id'),
             option_text=data.get('option_text'),
             poll_message=MaybeInaccessibleMessage.from_dict(data.get('poll_message')),
-            option_text_entities=[MessageEntity.from_dict(i) for i in data.get('option_text_entities')] if data.get('option_text_entities') else None,
+            option_text_entities=[MessageEntity.from_dict(i1) for i1 in data.get('option_text_entities')] if data.get('option_text_entities') else None,
         )

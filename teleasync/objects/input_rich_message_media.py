@@ -21,9 +21,9 @@ if TYPE_CHECKING:
 class InputRichMessageMedia:
     """Describes a media element embedded in an outgoing rich message."""
 
-    def __init__(self, id: str, media: InputMediaAudio | InputMediaVideo | InputMediaVoiceNote | InputMediaDocument | InputMediaAnimation | InputMediaPhoto):
+    def __init__(self, id: str, media: InputMediaAnimation | InputMediaAudio | InputMediaDocument | InputMediaPhoto | InputMediaVideo | InputMediaVoiceNote):
         self.id: str = id
-        self.media: InputMediaAudio | InputMediaVideo | InputMediaVoiceNote | InputMediaDocument | InputMediaAnimation | InputMediaPhoto = media
+        self.media: InputMediaAnimation | InputMediaAudio | InputMediaDocument | InputMediaPhoto | InputMediaVideo | InputMediaVoiceNote = media
 
     def to_dict(self) -> dict:
         def _serialize(v):

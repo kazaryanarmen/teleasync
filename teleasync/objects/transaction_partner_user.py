@@ -76,7 +76,7 @@ class TransactionPartnerUser:
             affiliate=AffiliateInfo.from_dict(data.get('affiliate')),
             invoice_payload=data.get('invoice_payload'),
             subscription_period=data.get('subscription_period'),
-            paid_media=[PaidMedia.from_dict(i) for i in data.get('paid_media')] if data.get('paid_media') else None,
+            paid_media=[PaidMedia.from_dict(i1) for i1 in data.get('paid_media')] if data.get('paid_media') else None,
             paid_media_payload=data.get('paid_media_payload'),
             gift=Gift.from_dict(data.get('gift')),
             premium_subscription_duration=data.get('premium_subscription_duration'),

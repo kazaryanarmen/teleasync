@@ -57,7 +57,7 @@ class ChecklistTask:
         return cls(
             id=data.get('id'),
             text=data.get('text'),
-            text_entities=[MessageEntity.from_dict(i) for i in data.get('text_entities')] if data.get('text_entities') else None,
+            text_entities=[MessageEntity.from_dict(i1) for i1 in data.get('text_entities')] if data.get('text_entities') else None,
             completed_by_user=User.from_dict(data.get('completed_by_user')),
             completed_by_chat=Chat.from_dict(data.get('completed_by_chat')),
             completion_date=data.get('completion_date'),

@@ -34,5 +34,5 @@ class UserChatBoosts:
             return None
         from .chat_boost import ChatBoost
         return cls(
-            boosts=[ChatBoost.from_dict(i) for i in data.get('boosts')] if data.get('boosts') else None,
+            boosts=[ChatBoost.from_dict(i1) for i1 in data.get('boosts')] if data.get('boosts') else None,
         )

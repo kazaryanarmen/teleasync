@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 class PaidMediaVideo:
     """The paid media is a video."""
 
-    def __init__(self, type: str, video_: Video):
+    def __init__(self, type: str, video: Video):
         self.type: str = type
-        self.video_: Video = video_
+        self.video: Video = video
 
     def to_dict(self) -> dict:
         def _serialize(v):
@@ -27,8 +27,8 @@ class PaidMediaVideo:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.video_ is not None:
-            result['video'] = _serialize(self.video_)
+        if self.video is not None:
+            result['video'] = _serialize(self.video)
         return result
 
     @classmethod
@@ -38,5 +38,5 @@ class PaidMediaVideo:
         from .video import Video
         return cls(
             type=data.get('type'),
-            video_=Video.from_dict(data.get('video')),
+            video=Video.from_dict(data.get('video')),
         )

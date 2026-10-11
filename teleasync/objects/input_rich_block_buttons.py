@@ -41,6 +41,6 @@ class InputRichBlockButtons:
         from .rich_message_button import RichMessageButton
         return cls(
             type=data.get('type'),
-            buttons=[RichMessageButton.from_dict(i) for i in data.get('buttons')] if data.get('buttons') else None,
+            buttons=[RichMessageButton.from_dict(i1) for i1 in data.get('buttons')] if data.get('buttons') else None,
             align=data.get('align'),
         )

@@ -38,5 +38,5 @@ class PaidMediaInfo:
         from .paid_media import PaidMedia
         return cls(
             star_count=data.get('star_count'),
-            paid_media=[PaidMedia.from_dict(i) for i in data.get('paid_media')] if data.get('paid_media') else None,
+            paid_media=[PaidMedia.from_dict(i1) for i1 in data.get('paid_media')] if data.get('paid_media') else None,
         )

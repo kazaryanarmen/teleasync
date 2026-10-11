@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 class BackgroundTypeWallpaper:
     """The background is a wallpaper in the JPEG format."""
 
-    def __init__(self, type: str, document_: Document, dark_theme_dimming: int, is_blurred: bool | None = None, is_moving: bool | None = None):
+    def __init__(self, type: str, document: Document, dark_theme_dimming: int, is_blurred: bool | None = None, is_moving: bool | None = None):
         self.type: str = type
-        self.document_: Document = document_
+        self.document: Document = document
         self.dark_theme_dimming: int = dark_theme_dimming
         self.is_blurred: bool | None = is_blurred
         self.is_moving: bool | None = is_moving
@@ -30,8 +30,8 @@ class BackgroundTypeWallpaper:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.document_ is not None:
-            result['document'] = _serialize(self.document_)
+        if self.document is not None:
+            result['document'] = _serialize(self.document)
         if self.dark_theme_dimming is not None:
             result['dark_theme_dimming'] = _serialize(self.dark_theme_dimming)
         if self.is_blurred is not None:
@@ -47,7 +47,7 @@ class BackgroundTypeWallpaper:
         from .document import Document
         return cls(
             type=data.get('type'),
-            document_=Document.from_dict(data.get('document')),
+            document=Document.from_dict(data.get('document')),
             dark_theme_dimming=data.get('dark_theme_dimming'),
             is_blurred=data.get('is_blurred'),
             is_moving=data.get('is_moving'),

@@ -40,6 +40,6 @@ class ChecklistTasksAdded:
         from .checklist_task import ChecklistTask
         from .message import Message
         return cls(
-            tasks=[ChecklistTask.from_dict(i) for i in data.get('tasks')] if data.get('tasks') else None,
+            tasks=[ChecklistTask.from_dict(i1) for i1 in data.get('tasks')] if data.get('tasks') else None,
             checklist_message=Message.from_dict(data.get('checklist_message')),
         )

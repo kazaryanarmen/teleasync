@@ -66,9 +66,9 @@ class EncryptedPassportElement:
             data=data.get('data'),
             phone_number=data.get('phone_number'),
             email=data.get('email'),
-            files=[PassportFile.from_dict(i) for i in data.get('files')] if data.get('files') else None,
+            files=[PassportFile.from_dict(i1) for i1 in data.get('files')] if data.get('files') else None,
             front_side=PassportFile.from_dict(data.get('front_side')),
             reverse_side=PassportFile.from_dict(data.get('reverse_side')),
             selfie=PassportFile.from_dict(data.get('selfie')),
-            translation=[PassportFile.from_dict(i) for i in data.get('translation')] if data.get('translation') else None,
+            translation=[PassportFile.from_dict(i1) for i1 in data.get('translation')] if data.get('translation') else None,
         )

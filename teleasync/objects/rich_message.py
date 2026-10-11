@@ -37,6 +37,6 @@ class RichMessage:
             return None
         from .rich_block import RichBlock
         return cls(
-            blocks=[RichBlock.from_dict(i) for i in data.get('blocks')] if data.get('blocks') else None,
+            blocks=[RichBlock.from_dict(i1) for i1 in data.get('blocks')] if data.get('blocks') else None,
             is_rtl=data.get('is_rtl'),
         )

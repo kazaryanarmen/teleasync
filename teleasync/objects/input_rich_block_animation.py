@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 class InputRichBlockAnimation:
     """A block with an animation, corresponding to the HTML tag <video>."""
 
-    def __init__(self, type: str, animation_: InputMediaAnimation, caption: RichBlockCaption | None = None):
+    def __init__(self, type: str, animation: InputMediaAnimation, caption: RichBlockCaption | None = None):
         self.type: str = type
-        self.animation_: InputMediaAnimation = animation_
+        self.animation: InputMediaAnimation = animation
         self.caption: RichBlockCaption | None = caption
 
     def to_dict(self) -> dict:
@@ -30,8 +30,8 @@ class InputRichBlockAnimation:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.animation_ is not None:
-            result['animation'] = _serialize(self.animation_)
+        if self.animation is not None:
+            result['animation'] = _serialize(self.animation)
         if self.caption is not None:
             result['caption'] = _serialize(self.caption)
         return result
@@ -44,6 +44,6 @@ class InputRichBlockAnimation:
         from .rich_block_caption import RichBlockCaption
         return cls(
             type=data.get('type'),
-            animation_=InputMediaAnimation.from_dict(data.get('animation')),
+            animation=InputMediaAnimation.from_dict(data.get('animation')),
             caption=RichBlockCaption.from_dict(data.get('caption')),
         )

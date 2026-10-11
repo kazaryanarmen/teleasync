@@ -70,7 +70,7 @@ class InlineQueryResultCachedVoice:
             title=data.get('title'),
             caption=data.get('caption'),
             parse_mode=data.get('parse_mode'),
-            caption_entities=[MessageEntity.from_dict(i) for i in data.get('caption_entities')] if data.get('caption_entities') else None,
+            caption_entities=[MessageEntity.from_dict(i1) for i1 in data.get('caption_entities')] if data.get('caption_entities') else None,
             reply_markup=InlineKeyboardMarkup.from_dict(data.get('reply_markup')),
             input_message_content=InputMessageContent.from_dict(data.get('input_message_content')),
         )

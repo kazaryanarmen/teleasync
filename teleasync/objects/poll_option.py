@@ -67,7 +67,7 @@ class PollOption:
             persistent_id=data.get('persistent_id'),
             text=data.get('text'),
             voter_count=data.get('voter_count'),
-            text_entities=[MessageEntity.from_dict(i) for i in data.get('text_entities')] if data.get('text_entities') else None,
+            text_entities=[MessageEntity.from_dict(i1) for i1 in data.get('text_entities')] if data.get('text_entities') else None,
             media=PollMedia.from_dict(data.get('media')),
             added_by_user=User.from_dict(data.get('added_by_user')),
             added_by_chat=Chat.from_dict(data.get('added_by_chat')),

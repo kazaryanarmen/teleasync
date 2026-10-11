@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     
+    from .input_file import InputFile
+    
     from .message_entity import MessageEntity
     
 
@@ -11,10 +13,10 @@ if TYPE_CHECKING:
 class InputMediaAnimation:
     """Represents an animation file (GIF or H.264/MPEG-4 AVC video without sound) to be sent."""
 
-    def __init__(self, type: str, media: str, thumbnail: str | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, width: int | None = None, height: int | None = None, duration: int | None = None, has_spoiler: bool | None = None):
+    def __init__(self, type: str, media: InputFile | str, thumbnail: InputFile | str | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, width: int | None = None, height: int | None = None, duration: int | None = None, has_spoiler: bool | None = None):
         self.type: str = type
-        self.media: str = media
-        self.thumbnail: str | None = thumbnail
+        self.media: InputFile | str = media
+        self.thumbnail: InputFile | str | None = thumbnail
         self.caption: str | None = caption
         self.parse_mode: str | None = parse_mode
         self.caption_entities: list[MessageEntity] | None = caption_entities
@@ -62,6 +64,7 @@ class InputMediaAnimation:
     def from_dict(cls, data: dict | None) -> 'InputMediaAnimation' | None:
         if not data:
             return None
+        from .input_file import InputFile
         from .message_entity import MessageEntity
         return cls(
             type=data.get('type'),
@@ -69,7 +72,7 @@ class InputMediaAnimation:
             thumbnail=data.get('thumbnail'),
             caption=data.get('caption'),
             parse_mode=data.get('parse_mode'),
-            caption_entities=[MessageEntity.from_dict(i) for i in data.get('caption_entities')] if data.get('caption_entities') else None,
+            caption_entities=[MessageEntity.from_dict(i1) for i1 in data.get('caption_entities')] if data.get('caption_entities') else None,
             show_caption_above_media=data.get('show_caption_above_media'),
             width=data.get('width'),
             height=data.get('height'),

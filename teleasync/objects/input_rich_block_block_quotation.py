@@ -44,6 +44,6 @@ class InputRichBlockBlockQuotation:
         from .rich_text import RichText
         return cls(
             type=data.get('type'),
-            blocks=[InputRichBlock.from_dict(i) for i in data.get('blocks')] if data.get('blocks') else None,
+            blocks=[InputRichBlock.from_dict(i1) for i1 in data.get('blocks')] if data.get('blocks') else None,
             credit=RichText.from_dict(data.get('credit')),
         )

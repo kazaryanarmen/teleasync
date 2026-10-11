@@ -11,12 +11,12 @@ if TYPE_CHECKING:
 class SharedUser:
     """This object contains information about a user that was shared with the bot using a KeyboardButtonRequestUsers button."""
 
-    def __init__(self, user_id: int, first_name: str | None = None, last_name: str | None = None, username: str | None = None, photo_: list[PhotoSize] | None = None):
+    def __init__(self, user_id: int, first_name: str | None = None, last_name: str | None = None, username: str | None = None, photo: list[PhotoSize] | None = None):
         self.user_id: int = user_id
         self.first_name: str | None = first_name
         self.last_name: str | None = last_name
         self.username: str | None = username
-        self.photo_: list[PhotoSize] | None = photo_
+        self.photo: list[PhotoSize] | None = photo
 
     def to_dict(self) -> dict:
         def _serialize(v):
@@ -36,8 +36,8 @@ class SharedUser:
             result['last_name'] = _serialize(self.last_name)
         if self.username is not None:
             result['username'] = _serialize(self.username)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
         return result
 
     @classmethod
@@ -50,5 +50,5 @@ class SharedUser:
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
             username=data.get('username'),
-            photo_=[PhotoSize.from_dict(i) for i in data.get('photo')] if data.get('photo') else None,
+            photo=[PhotoSize.from_dict(i1) for i1 in data.get('photo')] if data.get('photo') else None,
         )

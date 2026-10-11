@@ -67,7 +67,7 @@ class UniqueGiftInfo:
             gift=UniqueGift.from_dict(data.get('gift')),
             origin=data.get('origin'),
             text=data.get('text'),
-            entities=[MessageEntity.from_dict(i) for i in data.get('entities')] if data.get('entities') else None,
+            entities=[MessageEntity.from_dict(i1) for i1 in data.get('entities')] if data.get('entities') else None,
             is_private=data.get('is_private'),
             last_resale_currency=data.get('last_resale_currency'),
             last_resale_amount=data.get('last_resale_amount'),

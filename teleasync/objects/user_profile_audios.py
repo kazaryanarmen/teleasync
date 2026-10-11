@@ -38,5 +38,5 @@ class UserProfileAudios:
         from .audio import Audio
         return cls(
             total_count=data.get('total_count'),
-            audios=[Audio.from_dict(i) for i in data.get('audios')] if data.get('audios') else None,
+            audios=[Audio.from_dict(i1) for i1 in data.get('audios')] if data.get('audios') else None,
         )

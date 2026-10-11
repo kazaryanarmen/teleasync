@@ -67,7 +67,7 @@ class ReplyParameters:
             allow_sending_without_reply=data.get('allow_sending_without_reply'),
             quote=data.get('quote'),
             quote_parse_mode=data.get('quote_parse_mode'),
-            quote_entities=[MessageEntity.from_dict(i) for i in data.get('quote_entities')] if data.get('quote_entities') else None,
+            quote_entities=[MessageEntity.from_dict(i1) for i1 in data.get('quote_entities')] if data.get('quote_entities') else None,
             quote_position=data.get('quote_position'),
             checklist_task_id=data.get('checklist_task_id'),
             poll_option_id=data.get('poll_option_id'),

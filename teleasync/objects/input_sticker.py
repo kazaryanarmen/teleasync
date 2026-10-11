@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     
+    from .input_file import InputFile
+    
     from .mask_position import MaskPosition
     
 
@@ -11,8 +13,8 @@ if TYPE_CHECKING:
 class InputSticker:
     """This object describes a sticker to be added to a sticker set."""
 
-    def __init__(self, sticker_: str, format: str, emoji_list: list[str], mask_position: MaskPosition | None = None, keywords: list[str] | None = None):
-        self.sticker_: str = sticker_
+    def __init__(self, sticker: InputFile | str, format: str, emoji_list: list[str], mask_position: MaskPosition | None = None, keywords: list[str] | None = None):
+        self.sticker: InputFile | str = sticker
         self.format: str = format
         self.emoji_list: list[str] = emoji_list
         self.mask_position: MaskPosition | None = mask_position
@@ -28,8 +30,8 @@ class InputSticker:
                 return {k: _serialize(val) for k, val in v.items()}
             return v
         result = {}
-        if self.sticker_ is not None:
-            result['sticker'] = _serialize(self.sticker_)
+        if self.sticker is not None:
+            result['sticker'] = _serialize(self.sticker)
         if self.format is not None:
             result['format'] = _serialize(self.format)
         if self.emoji_list is not None:
@@ -44,9 +46,10 @@ class InputSticker:
     def from_dict(cls, data: dict | None) -> 'InputSticker' | None:
         if not data:
             return None
+        from .input_file import InputFile
         from .mask_position import MaskPosition
         return cls(
-            sticker_=data.get('sticker'),
+            sticker=data.get('sticker'),
             format=data.get('format'),
             emoji_list=data.get('emoji_list'),
             mask_position=MaskPosition.from_dict(data.get('mask_position')),

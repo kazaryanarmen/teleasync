@@ -11,10 +11,10 @@ if TYPE_CHECKING:
 class BusinessIntro:
     """Contains information about the start page settings of a Telegram Business account."""
 
-    def __init__(self, title: str | None = None, message: str | None = None, sticker_: Sticker | None = None):
+    def __init__(self, title: str | None = None, message: str | None = None, sticker: Sticker | None = None):
         self.title: str | None = title
         self.message: str | None = message
-        self.sticker_: Sticker | None = sticker_
+        self.sticker: Sticker | None = sticker
 
     def to_dict(self) -> dict:
         def _serialize(v):
@@ -30,8 +30,8 @@ class BusinessIntro:
             result['title'] = _serialize(self.title)
         if self.message is not None:
             result['message'] = _serialize(self.message)
-        if self.sticker_ is not None:
-            result['sticker'] = _serialize(self.sticker_)
+        if self.sticker is not None:
+            result['sticker'] = _serialize(self.sticker)
         return result
 
     @classmethod
@@ -42,5 +42,5 @@ class BusinessIntro:
         return cls(
             title=data.get('title'),
             message=data.get('message'),
-            sticker_=Sticker.from_dict(data.get('sticker')),
+            sticker=Sticker.from_dict(data.get('sticker')),
         )

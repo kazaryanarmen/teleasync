@@ -1,29 +1,28 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
+from importlib import import_module
 
 
 class TransactionPartner:
-    """This object describes the source of a transaction, or its recipient for outgoing transactions. Currently, it can be one of - TransactionPartnerUser - TransactionPartnerChat - TransactionPartnerAffiliateProgram - TransactionPartnerFragment - TransactionPartnerTelegramAds - TransactionPartnerTelegramApi - TransactionPartnerOther"""
+    """Union-тип. from_dict возвращает нужный подтип по полю 'type'
+    (неизвестное значение -> исходный dict)."""
 
-    def __init__(self):
-        pass
-
-    def to_dict(self) -> dict:
-        def _serialize(v):
-            if hasattr(v, 'to_dict'):
-                return v.to_dict()
-            elif isinstance(v, list):
-                return [_serialize(i) for i in v]
-            elif isinstance(v, dict):
-                return {k: _serialize(val) for k, val in v.items()}
-            return v
-        result = {}
-        return result
+    _DISCRIMINATOR = "type"
+    _SUBTYPES = {
+        "user": ("transaction_partner_user", "TransactionPartnerUser"),
+        "chat": ("transaction_partner_chat", "TransactionPartnerChat"),
+        "affiliate_program": ("transaction_partner_affiliate_program", "TransactionPartnerAffiliateProgram"),
+        "fragment": ("transaction_partner_fragment", "TransactionPartnerFragment"),
+        "telegram_ads": ("transaction_partner_telegram_ads", "TransactionPartnerTelegramAds"),
+        "telegram_api": ("transaction_partner_telegram_api", "TransactionPartnerTelegramApi"),
+        "other": ("transaction_partner_other", "TransactionPartnerOther"),
+    }
 
     @classmethod
-    def from_dict(cls, data: dict | None) -> 'TransactionPartner' | None:
+    def from_dict(cls, data: dict | None):
         if not data:
             return None
-        return cls(
-        )
+        entry = cls._SUBTYPES.get(data.get(cls._DISCRIMINATOR))
+        if entry is None:
+            return data
+        module = import_module("." + entry[0], __package__)
+        return getattr(module, entry[1]).from_dict(data)

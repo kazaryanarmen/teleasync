@@ -40,6 +40,6 @@ class PassportData:
         from .encrypted_credentials import EncryptedCredentials
         from .encrypted_passport_element import EncryptedPassportElement
         return cls(
-            data=[EncryptedPassportElement.from_dict(i) for i in data.get('data')] if data.get('data') else None,
+            data=[EncryptedPassportElement.from_dict(i1) for i1 in data.get('data')] if data.get('data') else None,
             credentials=EncryptedCredentials.from_dict(data.get('credentials')),
         )

@@ -2,13 +2,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 
+if TYPE_CHECKING:
+    
+    from .input_file import InputFile
+    
+
 
 class InputStoryContentVideo:
     """Describes a video to post as a story."""
 
-    def __init__(self, type: str, video_: str, duration: float | None = None, cover_frame_timestamp: float | None = None, is_animation: bool | None = None):
+    def __init__(self, type: str, video: InputFile | str, duration: float | None = None, cover_frame_timestamp: float | None = None, is_animation: bool | None = None):
         self.type: str = type
-        self.video_: str = video_
+        self.video: InputFile | str = video
         self.duration: float | None = duration
         self.cover_frame_timestamp: float | None = cover_frame_timestamp
         self.is_animation: bool | None = is_animation
@@ -25,8 +30,8 @@ class InputStoryContentVideo:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.video_ is not None:
-            result['video'] = _serialize(self.video_)
+        if self.video is not None:
+            result['video'] = _serialize(self.video)
         if self.duration is not None:
             result['duration'] = _serialize(self.duration)
         if self.cover_frame_timestamp is not None:
@@ -39,9 +44,10 @@ class InputStoryContentVideo:
     def from_dict(cls, data: dict | None) -> 'InputStoryContentVideo' | None:
         if not data:
             return None
+        from .input_file import InputFile
         return cls(
             type=data.get('type'),
-            video_=data.get('video'),
+            video=data.get('video'),
             duration=data.get('duration'),
             cover_frame_timestamp=data.get('cover_frame_timestamp'),
             is_animation=data.get('is_animation'),

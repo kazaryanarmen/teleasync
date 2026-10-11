@@ -48,6 +48,6 @@ class RichBlockDetails:
         return cls(
             type=data.get('type'),
             summary=RichText.from_dict(data.get('summary')),
-            blocks=[RichBlock.from_dict(i) for i in data.get('blocks')] if data.get('blocks') else None,
+            blocks=[RichBlock.from_dict(i1) for i1 in data.get('blocks')] if data.get('blocks') else None,
             is_open=data.get('is_open'),
         )

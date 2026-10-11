@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     
+    from .input_file import InputFile
+    
     from .message_entity import MessageEntity
     
 
@@ -11,10 +13,10 @@ if TYPE_CHECKING:
 class InputMediaLivePhoto:
     """Represents a live photo to be sent."""
 
-    def __init__(self, type: str, media: str, photo_: str, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None):
+    def __init__(self, type: str, media: InputFile | str, photo: InputFile | str, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None):
         self.type: str = type
-        self.media: str = media
-        self.photo_: str = photo_
+        self.media: InputFile | str = media
+        self.photo: InputFile | str = photo
         self.caption: str | None = caption
         self.parse_mode: str | None = parse_mode
         self.caption_entities: list[MessageEntity] | None = caption_entities
@@ -35,8 +37,8 @@ class InputMediaLivePhoto:
             result['type'] = _serialize(self.type)
         if self.media is not None:
             result['media'] = _serialize(self.media)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
         if self.caption is not None:
             result['caption'] = _serialize(self.caption)
         if self.parse_mode is not None:
@@ -53,14 +55,15 @@ class InputMediaLivePhoto:
     def from_dict(cls, data: dict | None) -> 'InputMediaLivePhoto' | None:
         if not data:
             return None
+        from .input_file import InputFile
         from .message_entity import MessageEntity
         return cls(
             type=data.get('type'),
             media=data.get('media'),
-            photo_=data.get('photo'),
+            photo=data.get('photo'),
             caption=data.get('caption'),
             parse_mode=data.get('parse_mode'),
-            caption_entities=[MessageEntity.from_dict(i) for i in data.get('caption_entities')] if data.get('caption_entities') else None,
+            caption_entities=[MessageEntity.from_dict(i1) for i1 in data.get('caption_entities')] if data.get('caption_entities') else None,
             show_caption_above_media=data.get('show_caption_above_media'),
             has_spoiler=data.get('has_spoiler'),
         )

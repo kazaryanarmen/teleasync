@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 class UserProfilePhotos:
     """This object represent a user's profile pictures."""
 
-    def __init__(self, total_count: int, photos: list[PhotoSize]):
+    def __init__(self, total_count: int, photos: list[list[PhotoSize]]):
         self.total_count: int = total_count
-        self.photos: list[PhotoSize] = photos
+        self.photos: list[list[PhotoSize]] = photos
 
     def to_dict(self) -> dict:
         def _serialize(v):
@@ -38,5 +38,5 @@ class UserProfilePhotos:
         from .photo_size import PhotoSize
         return cls(
             total_count=data.get('total_count'),
-            photos=[PhotoSize.from_dict(i) for i in data.get('photos')] if data.get('photos') else None,
+            photos=[[PhotoSize.from_dict(i1) for i1 in i2] for i2 in data.get('photos')] if data.get('photos') else None,
         )

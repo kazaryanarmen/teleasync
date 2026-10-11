@@ -52,6 +52,6 @@ class StickerSet:
             name=data.get('name'),
             title=data.get('title'),
             sticker_type=data.get('sticker_type'),
-            stickers=[Sticker.from_dict(i) for i in data.get('stickers')] if data.get('stickers') else None,
+            stickers=[Sticker.from_dict(i1) for i1 in data.get('stickers')] if data.get('stickers') else None,
             thumbnail=PhotoSize.from_dict(data.get('thumbnail')),
         )

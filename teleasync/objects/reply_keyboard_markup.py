@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 class ReplyKeyboardMarkup:
     """This object represents a custom keyboard with reply options (see Introduction to bots for details and examples). Not supported in channels and for messages sent on behalf of a business account."""
 
-    def __init__(self, keyboard: list[KeyboardButton], is_persistent: bool | None = None, resize_keyboard: bool | None = None, one_time_keyboard: bool | None = None, input_field_placeholder: str | None = None, selective: bool | None = None, force_reply: bool | None = None):
-        self.keyboard: list[KeyboardButton] = keyboard
+    def __init__(self, keyboard: list[list[KeyboardButton]], is_persistent: bool | None = None, resize_keyboard: bool | None = None, one_time_keyboard: bool | None = None, input_field_placeholder: str | None = None, selective: bool | None = None, force_reply: bool | None = None):
+        self.keyboard: list[list[KeyboardButton]] = keyboard
         self.is_persistent: bool | None = is_persistent
         self.resize_keyboard: bool | None = resize_keyboard
         self.one_time_keyboard: bool | None = one_time_keyboard
@@ -52,7 +52,7 @@ class ReplyKeyboardMarkup:
             return None
         from .keyboard_button import KeyboardButton
         return cls(
-            keyboard=[KeyboardButton.from_dict(i) for i in data.get('keyboard')] if data.get('keyboard') else None,
+            keyboard=[[KeyboardButton.from_dict(i1) for i1 in i2] for i2 in data.get('keyboard')] if data.get('keyboard') else None,
             is_persistent=data.get('is_persistent'),
             resize_keyboard=data.get('resize_keyboard'),
             one_time_keyboard=data.get('one_time_keyboard'),

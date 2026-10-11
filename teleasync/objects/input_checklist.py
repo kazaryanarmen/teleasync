@@ -53,9 +53,9 @@ class InputChecklist:
         from .message_entity import MessageEntity
         return cls(
             title=data.get('title'),
-            tasks=[InputChecklistTask.from_dict(i) for i in data.get('tasks')] if data.get('tasks') else None,
+            tasks=[InputChecklistTask.from_dict(i1) for i1 in data.get('tasks')] if data.get('tasks') else None,
             parse_mode=data.get('parse_mode'),
-            title_entities=[MessageEntity.from_dict(i) for i in data.get('title_entities')] if data.get('title_entities') else None,
+            title_entities=[MessageEntity.from_dict(i1) for i1 in data.get('title_entities')] if data.get('title_entities') else None,
             others_can_add_tasks=data.get('others_can_add_tasks'),
             others_can_mark_tasks_as_done=data.get('others_can_mark_tasks_as_done'),
         )

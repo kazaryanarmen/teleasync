@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 class UniqueGiftSymbol:
     """This object describes the symbol shown on the pattern of a unique gift."""
 
-    def __init__(self, name: str, sticker_: Sticker, rarity_per_mille: int):
+    def __init__(self, name: str, sticker: Sticker, rarity_per_mille: int):
         self.name: str = name
-        self.sticker_: Sticker = sticker_
+        self.sticker: Sticker = sticker
         self.rarity_per_mille: int = rarity_per_mille
 
     def to_dict(self) -> dict:
@@ -28,8 +28,8 @@ class UniqueGiftSymbol:
         result = {}
         if self.name is not None:
             result['name'] = _serialize(self.name)
-        if self.sticker_ is not None:
-            result['sticker'] = _serialize(self.sticker_)
+        if self.sticker is not None:
+            result['sticker'] = _serialize(self.sticker)
         if self.rarity_per_mille is not None:
             result['rarity_per_mille'] = _serialize(self.rarity_per_mille)
         return result
@@ -41,6 +41,6 @@ class UniqueGiftSymbol:
         from .sticker import Sticker
         return cls(
             name=data.get('name'),
-            sticker_=Sticker.from_dict(data.get('sticker')),
+            sticker=Sticker.from_dict(data.get('sticker')),
             rarity_per_mille=data.get('rarity_per_mille'),
         )

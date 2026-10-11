@@ -76,7 +76,7 @@ class InlineQueryResultAudio:
             title=data.get('title'),
             caption=data.get('caption'),
             parse_mode=data.get('parse_mode'),
-            caption_entities=[MessageEntity.from_dict(i) for i in data.get('caption_entities')] if data.get('caption_entities') else None,
+            caption_entities=[MessageEntity.from_dict(i1) for i1 in data.get('caption_entities')] if data.get('caption_entities') else None,
             performer=data.get('performer'),
             audio_duration=data.get('audio_duration'),
             reply_markup=InlineKeyboardMarkup.from_dict(data.get('reply_markup')),

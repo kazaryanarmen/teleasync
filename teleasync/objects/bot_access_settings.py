@@ -38,5 +38,5 @@ class BotAccessSettings:
         from .user import User
         return cls(
             is_access_restricted=data.get('is_access_restricted'),
-            added_users=[User.from_dict(i) for i in data.get('added_users')] if data.get('added_users') else None,
+            added_users=[User.from_dict(i1) for i1 in data.get('added_users')] if data.get('added_users') else None,
         )

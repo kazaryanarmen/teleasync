@@ -58,7 +58,7 @@ class Giveaway:
             return None
         from .chat import Chat
         return cls(
-            chats=[Chat.from_dict(i) for i in data.get('chats')] if data.get('chats') else None,
+            chats=[Chat.from_dict(i1) for i1 in data.get('chats')] if data.get('chats') else None,
             winners_selection_date=data.get('winners_selection_date'),
             winner_count=data.get('winner_count'),
             only_new_members=data.get('only_new_members'),

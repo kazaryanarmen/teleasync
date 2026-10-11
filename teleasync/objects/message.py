@@ -159,7 +159,7 @@ if TYPE_CHECKING:
 class Message:
     """This object represents a message."""
 
-    def __init__(self, message_id: int, date: int, chat: Chat, message_thread_id: int | None = None, direct_messages_topic: DirectMessagesTopic | None = None, from_: User | None = None, sender_chat: Chat | None = None, sender_boost_count: int | None = None, sender_business_bot: User | None = None, sender_tag: str | None = None, receiver_user: User | None = None, ephemeral_message_id: int | None = None, guest_query_id: str | None = None, business_connection_id: str | None = None, forward_origin: MessageOrigin | None = None, is_topic_message: bool | None = None, is_automatic_forward: bool | None = None, reply_to_message: Message | None = None, external_reply: ExternalReplyInfo | None = None, quote: TextQuote | None = None, reply_to_story: Story | None = None, reply_to_checklist_task_id: int | None = None, reply_to_poll_option_id: str | None = None, via_bot: User | None = None, guest_bot_caller_user: User | None = None, guest_bot_caller_chat: Chat | None = None, edit_date: int | None = None, has_protected_content: bool | None = None, is_from_offline: bool | None = None, is_paid_post: bool | None = None, media_group_id: str | None = None, author_signature: str | None = None, paid_star_count: int | None = None, text: str | None = None, entities: list[MessageEntity] | None = None, link_preview_options: LinkPreviewOptions | None = None, suggested_post_info: SuggestedPostInfo | None = None, effect_id: str | None = None, rich_message: RichMessage | None = None, animation_: Animation | None = None, audio_: Audio | None = None, document_: Document | None = None, live_photo: LivePhoto | None = None, paid_media: PaidMediaInfo | None = None, photo_: list[PhotoSize] | None = None, sticker_: Sticker | None = None, story: Story | None = None, video_: Video | None = None, video_note: VideoNote | None = None, voice_: Voice | None = None, caption: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_media_spoiler: bool | None = None, checklist: Checklist | None = None, contact: Contact | None = None, dice: Dice | None = None, game: Game | None = None, poll: Poll | None = None, venue: Venue | None = None, location: Location | None = None, new_chat_members: list[User] | None = None, left_chat_member: User | None = None, chat_owner_left: ChatOwnerLeft | None = None, chat_owner_changed: ChatOwnerChanged | None = None, new_chat_title: str | None = None, new_chat_photo: list[PhotoSize] | None = None, delete_chat_photo: bool | None = None, group_chat_created: bool | None = None, supergroup_chat_created: bool | None = None, channel_chat_created: bool | None = None, message_auto_delete_timer_changed: MessageAutoDeleteTimerChanged | None = None, migrate_to_chat_id: int | None = None, migrate_from_chat_id: int | None = None, pinned_message: MaybeInaccessibleMessage | None = None, invoice: Invoice | None = None, successful_payment: SuccessfulPayment | None = None, refunded_payment: RefundedPayment | None = None, users_shared: UsersShared | None = None, chat_shared: ChatShared | None = None, gift: GiftInfo | None = None, unique_gift: UniqueGiftInfo | None = None, gift_upgrade_sent: GiftInfo | None = None, connected_website: str | None = None, write_access_allowed: WriteAccessAllowed | None = None, passport_data: PassportData | None = None, proximity_alert_triggered: ProximityAlertTriggered | None = None, boost_added: ChatBoostAdded | None = None, chat_background_set: ChatBackground | None = None, checklist_tasks_done: ChecklistTasksDone | None = None, checklist_tasks_added: ChecklistTasksAdded | None = None, community_chat_added: CommunityChatAdded | None = None, community_chat_joined: CommunityChatJoined | None = None, community_chat_removed: CommunityChatRemoved | None = None, direct_message_price_changed: DirectMessagePriceChanged | None = None, forum_topic_created: ForumTopicCreated | None = None, forum_topic_edited: ForumTopicEdited | None = None, forum_topic_closed: ForumTopicClosed | None = None, forum_topic_reopened: ForumTopicReopened | None = None, general_forum_topic_hidden: GeneralForumTopicHidden | None = None, general_forum_topic_unhidden: GeneralForumTopicUnhidden | None = None, giveaway_created: GiveawayCreated | None = None, giveaway: Giveaway | None = None, giveaway_winners: GiveawayWinners | None = None, giveaway_completed: GiveawayCompleted | None = None, managed_bot_created: ManagedBotCreated | None = None, paid_message_price_changed: PaidMessagePriceChanged | None = None, poll_option_added: PollOptionAdded | None = None, poll_option_deleted: PollOptionDeleted | None = None, suggested_post_approved: SuggestedPostApproved | None = None, suggested_post_approval_failed: SuggestedPostApprovalFailed | None = None, suggested_post_declined: SuggestedPostDeclined | None = None, suggested_post_paid: SuggestedPostPaid | None = None, suggested_post_refunded: SuggestedPostRefunded | None = None, video_chat_scheduled: VideoChatScheduled | None = None, video_chat_started: VideoChatStarted | None = None, video_chat_ended: VideoChatEnded | None = None, video_chat_participants_invited: VideoChatParticipantsInvited | None = None, web_app_data: WebAppData | None = None, reply_markup: InlineKeyboardMarkup | None = None):
+    def __init__(self, message_id: int, date: int, chat: Chat, message_thread_id: int | None = None, direct_messages_topic: DirectMessagesTopic | None = None, from_: User | None = None, sender_chat: Chat | None = None, sender_boost_count: int | None = None, sender_business_bot: User | None = None, sender_tag: str | None = None, receiver_user: User | None = None, ephemeral_message_id: int | None = None, guest_query_id: str | None = None, business_connection_id: str | None = None, forward_origin: MessageOrigin | None = None, is_topic_message: bool | None = None, is_automatic_forward: bool | None = None, reply_to_message: Message | None = None, external_reply: ExternalReplyInfo | None = None, quote: TextQuote | None = None, reply_to_story: Story | None = None, reply_to_checklist_task_id: int | None = None, reply_to_poll_option_id: str | None = None, via_bot: User | None = None, guest_bot_caller_user: User | None = None, guest_bot_caller_chat: Chat | None = None, edit_date: int | None = None, has_protected_content: bool | None = None, is_from_offline: bool | None = None, is_paid_post: bool | None = None, media_group_id: str | None = None, author_signature: str | None = None, paid_star_count: int | None = None, text: str | None = None, entities: list[MessageEntity] | None = None, link_preview_options: LinkPreviewOptions | None = None, suggested_post_info: SuggestedPostInfo | None = None, effect_id: str | None = None, rich_message: RichMessage | None = None, animation: Animation | None = None, audio: Audio | None = None, document: Document | None = None, live_photo: LivePhoto | None = None, paid_media: PaidMediaInfo | None = None, photo: list[PhotoSize] | None = None, sticker: Sticker | None = None, story: Story | None = None, video: Video | None = None, video_note: VideoNote | None = None, voice: Voice | None = None, caption: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_media_spoiler: bool | None = None, checklist: Checklist | None = None, contact: Contact | None = None, dice: Dice | None = None, game: Game | None = None, poll: Poll | None = None, venue: Venue | None = None, location: Location | None = None, new_chat_members: list[User] | None = None, left_chat_member: User | None = None, chat_owner_left: ChatOwnerLeft | None = None, chat_owner_changed: ChatOwnerChanged | None = None, new_chat_title: str | None = None, new_chat_photo: list[PhotoSize] | None = None, delete_chat_photo: bool | None = None, group_chat_created: bool | None = None, supergroup_chat_created: bool | None = None, channel_chat_created: bool | None = None, message_auto_delete_timer_changed: MessageAutoDeleteTimerChanged | None = None, migrate_to_chat_id: int | None = None, migrate_from_chat_id: int | None = None, pinned_message: MaybeInaccessibleMessage | None = None, invoice: Invoice | None = None, successful_payment: SuccessfulPayment | None = None, refunded_payment: RefundedPayment | None = None, users_shared: UsersShared | None = None, chat_shared: ChatShared | None = None, gift: GiftInfo | None = None, unique_gift: UniqueGiftInfo | None = None, gift_upgrade_sent: GiftInfo | None = None, connected_website: str | None = None, write_access_allowed: WriteAccessAllowed | None = None, passport_data: PassportData | None = None, proximity_alert_triggered: ProximityAlertTriggered | None = None, boost_added: ChatBoostAdded | None = None, chat_background_set: ChatBackground | None = None, checklist_tasks_done: ChecklistTasksDone | None = None, checklist_tasks_added: ChecklistTasksAdded | None = None, community_chat_added: CommunityChatAdded | None = None, community_chat_joined: CommunityChatJoined | None = None, community_chat_removed: CommunityChatRemoved | None = None, direct_message_price_changed: DirectMessagePriceChanged | None = None, forum_topic_created: ForumTopicCreated | None = None, forum_topic_edited: ForumTopicEdited | None = None, forum_topic_closed: ForumTopicClosed | None = None, forum_topic_reopened: ForumTopicReopened | None = None, general_forum_topic_hidden: GeneralForumTopicHidden | None = None, general_forum_topic_unhidden: GeneralForumTopicUnhidden | None = None, giveaway_created: GiveawayCreated | None = None, giveaway: Giveaway | None = None, giveaway_winners: GiveawayWinners | None = None, giveaway_completed: GiveawayCompleted | None = None, managed_bot_created: ManagedBotCreated | None = None, paid_message_price_changed: PaidMessagePriceChanged | None = None, poll_option_added: PollOptionAdded | None = None, poll_option_deleted: PollOptionDeleted | None = None, suggested_post_approved: SuggestedPostApproved | None = None, suggested_post_approval_failed: SuggestedPostApprovalFailed | None = None, suggested_post_declined: SuggestedPostDeclined | None = None, suggested_post_paid: SuggestedPostPaid | None = None, suggested_post_refunded: SuggestedPostRefunded | None = None, video_chat_scheduled: VideoChatScheduled | None = None, video_chat_started: VideoChatStarted | None = None, video_chat_ended: VideoChatEnded | None = None, video_chat_participants_invited: VideoChatParticipantsInvited | None = None, web_app_data: WebAppData | None = None, reply_markup: InlineKeyboardMarkup | None = None):
         self.message_id: int = message_id
         self.date: int = date
         self.chat: Chat = chat
@@ -199,17 +199,17 @@ class Message:
         self.suggested_post_info: SuggestedPostInfo | None = suggested_post_info
         self.effect_id: str | None = effect_id
         self.rich_message: RichMessage | None = rich_message
-        self.animation_: Animation | None = animation_
-        self.audio_: Audio | None = audio_
-        self.document_: Document | None = document_
+        self.animation: Animation | None = animation
+        self.audio: Audio | None = audio
+        self.document: Document | None = document
         self.live_photo: LivePhoto | None = live_photo
         self.paid_media: PaidMediaInfo | None = paid_media
-        self.photo_: list[PhotoSize] | None = photo_
-        self.sticker_: Sticker | None = sticker_
+        self.photo: list[PhotoSize] | None = photo
+        self.sticker: Sticker | None = sticker
         self.story: Story | None = story
-        self.video_: Video | None = video_
+        self.video: Video | None = video
         self.video_note: VideoNote | None = video_note
-        self.voice_: Voice | None = voice_
+        self.voice: Voice | None = voice
         self.caption: str | None = caption
         self.caption_entities: list[MessageEntity] | None = caption_entities
         self.show_caption_above_media: bool | None = show_caption_above_media
@@ -369,28 +369,28 @@ class Message:
             result['effect_id'] = _serialize(self.effect_id)
         if self.rich_message is not None:
             result['rich_message'] = _serialize(self.rich_message)
-        if self.animation_ is not None:
-            result['animation'] = _serialize(self.animation_)
-        if self.audio_ is not None:
-            result['audio'] = _serialize(self.audio_)
-        if self.document_ is not None:
-            result['document'] = _serialize(self.document_)
+        if self.animation is not None:
+            result['animation'] = _serialize(self.animation)
+        if self.audio is not None:
+            result['audio'] = _serialize(self.audio)
+        if self.document is not None:
+            result['document'] = _serialize(self.document)
         if self.live_photo is not None:
             result['live_photo'] = _serialize(self.live_photo)
         if self.paid_media is not None:
             result['paid_media'] = _serialize(self.paid_media)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
-        if self.sticker_ is not None:
-            result['sticker'] = _serialize(self.sticker_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
+        if self.sticker is not None:
+            result['sticker'] = _serialize(self.sticker)
         if self.story is not None:
             result['story'] = _serialize(self.story)
-        if self.video_ is not None:
-            result['video'] = _serialize(self.video_)
+        if self.video is not None:
+            result['video'] = _serialize(self.video)
         if self.video_note is not None:
             result['video_note'] = _serialize(self.video_note)
-        if self.voice_ is not None:
-            result['voice'] = _serialize(self.voice_)
+        if self.voice is not None:
+            result['voice'] = _serialize(self.voice)
         if self.caption is not None:
             result['caption'] = _serialize(self.caption)
         if self.caption_entities is not None:
@@ -647,24 +647,24 @@ class Message:
             author_signature=data.get('author_signature'),
             paid_star_count=data.get('paid_star_count'),
             text=data.get('text'),
-            entities=[MessageEntity.from_dict(i) for i in data.get('entities')] if data.get('entities') else None,
+            entities=[MessageEntity.from_dict(i1) for i1 in data.get('entities')] if data.get('entities') else None,
             link_preview_options=LinkPreviewOptions.from_dict(data.get('link_preview_options')),
             suggested_post_info=SuggestedPostInfo.from_dict(data.get('suggested_post_info')),
             effect_id=data.get('effect_id'),
             rich_message=RichMessage.from_dict(data.get('rich_message')),
-            animation_=Animation.from_dict(data.get('animation')),
-            audio_=Audio.from_dict(data.get('audio')),
-            document_=Document.from_dict(data.get('document')),
+            animation=Animation.from_dict(data.get('animation')),
+            audio=Audio.from_dict(data.get('audio')),
+            document=Document.from_dict(data.get('document')),
             live_photo=LivePhoto.from_dict(data.get('live_photo')),
             paid_media=PaidMediaInfo.from_dict(data.get('paid_media')),
-            photo_=[PhotoSize.from_dict(i) for i in data.get('photo')] if data.get('photo') else None,
-            sticker_=Sticker.from_dict(data.get('sticker')),
+            photo=[PhotoSize.from_dict(i1) for i1 in data.get('photo')] if data.get('photo') else None,
+            sticker=Sticker.from_dict(data.get('sticker')),
             story=Story.from_dict(data.get('story')),
-            video_=Video.from_dict(data.get('video')),
+            video=Video.from_dict(data.get('video')),
             video_note=VideoNote.from_dict(data.get('video_note')),
-            voice_=Voice.from_dict(data.get('voice')),
+            voice=Voice.from_dict(data.get('voice')),
             caption=data.get('caption'),
-            caption_entities=[MessageEntity.from_dict(i) for i in data.get('caption_entities')] if data.get('caption_entities') else None,
+            caption_entities=[MessageEntity.from_dict(i1) for i1 in data.get('caption_entities')] if data.get('caption_entities') else None,
             show_caption_above_media=data.get('show_caption_above_media'),
             has_media_spoiler=data.get('has_media_spoiler'),
             checklist=Checklist.from_dict(data.get('checklist')),
@@ -674,12 +674,12 @@ class Message:
             poll=Poll.from_dict(data.get('poll')),
             venue=Venue.from_dict(data.get('venue')),
             location=Location.from_dict(data.get('location')),
-            new_chat_members=[User.from_dict(i) for i in data.get('new_chat_members')] if data.get('new_chat_members') else None,
+            new_chat_members=[User.from_dict(i1) for i1 in data.get('new_chat_members')] if data.get('new_chat_members') else None,
             left_chat_member=User.from_dict(data.get('left_chat_member')),
             chat_owner_left=ChatOwnerLeft.from_dict(data.get('chat_owner_left')),
             chat_owner_changed=ChatOwnerChanged.from_dict(data.get('chat_owner_changed')),
             new_chat_title=data.get('new_chat_title'),
-            new_chat_photo=[PhotoSize.from_dict(i) for i in data.get('new_chat_photo')] if data.get('new_chat_photo') else None,
+            new_chat_photo=[PhotoSize.from_dict(i1) for i1 in data.get('new_chat_photo')] if data.get('new_chat_photo') else None,
             delete_chat_photo=data.get('delete_chat_photo'),
             group_chat_created=data.get('group_chat_created'),
             supergroup_chat_created=data.get('supergroup_chat_created'),

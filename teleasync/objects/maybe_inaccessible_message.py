@@ -1,29 +1,15 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
 
 
 class MaybeInaccessibleMessage:
-    """This object describes a message that can be inaccessible to the bot. It can be one of - Message - InaccessibleMessage"""
-
-    def __init__(self):
-        pass
-
-    def to_dict(self) -> dict:
-        def _serialize(v):
-            if hasattr(v, 'to_dict'):
-                return v.to_dict()
-            elif isinstance(v, list):
-                return [_serialize(i) for i in v]
-            elif isinstance(v, dict):
-                return {k: _serialize(val) for k, val in v.items()}
-            return v
-        result = {}
-        return result
+    """Union: Message или InaccessibleMessage (если date == 0)."""
 
     @classmethod
-    def from_dict(cls, data: dict | None) -> 'MaybeInaccessibleMessage' | None:
+    def from_dict(cls, data: dict | None):
         if not data:
             return None
-        return cls(
-        )
+        if data.get("date") == 0:
+            from .inaccessible_message import InaccessibleMessage
+            return InaccessibleMessage.from_dict(data)
+        from .message import Message
+        return Message.from_dict(data)

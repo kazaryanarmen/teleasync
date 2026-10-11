@@ -1,10 +1,6 @@
 from __future__ import annotations
-import httpx
-import asyncio
-import json
-import logging
 from typing import TYPE_CHECKING
-from .exceptions import TelegramBadRequestError, TelegramUnauthorizedError, TelegramNetworkError, TelegramAPIError
+from .base_bot import BaseBot
 
 if TYPE_CHECKING:
     from .objects.accepted_gift_types import AcceptedGiftTypes
@@ -79,154 +75,11 @@ if TYPE_CHECKING:
     from .objects.webhook_info import WebhookInfo
 
 
-logger = logging.getLogger("teleasync")
 
-class TelegramBot:
-    def __init__(self, token: str, client: httpx.AsyncClient | None = None):
-        self.token = token
-        self.base_url = f"https://api.telegram.org/bot{token}"
-        self.file_url = f"https://api.telegram.org/file/bot{token}"
-        self._client = client
-        self._owns_client = client is None
-
-        if len(token) > 10:
-            self.masked_token = f"{token[:6]}...{token[-4:]}"
-        else:
-            self.masked_token = "***"
-            
-        logger.info(f"Initialize Telegram Bot with token: {self.masked_token}")
-
-    async def get_client(self) -> httpx.AsyncClient:
-        if self._client is None or self._client.is_closed:
-            self._client = httpx.AsyncClient(timeout=60.0)
-        return self._client
-
-    async def close(self):
-        if self._owns_client and self._client and not self._client.is_closed:
-            await self._client.aclose()
-
-    async def request(self, method_name: str, params: dict | None = None, files: dict | None = None) -> dict:
-        url = f"{self.base_url}/{method_name}"
-        if params:
-            cleaned_params = {}
-            for k, v in params.items():
-                if v is not None:
-                    if hasattr(v, 'to_dict'):
-                        v = v.to_dict()
-                    elif isinstance(v, list):
-                        v = [i.to_dict() if hasattr(i, 'to_dict') else i for i in v]
-
-                    if isinstance(v, (dict, list)):
-                        v = json.dumps(v)
-
-                    original_key = k[:-1] if k.endswith('_') and k[:-1] in ['from', 'photo', 'video', 'document', 'audio', 'sticker', 'animation', 'voice'] else k
-                    cleaned_params[original_key] = v
-            params = cleaned_params
-        
-        client = await self.get_client()
-        
-        try:
-            if files:
-                response = await client.post(url, data=params, files=files)
-            else:
-                response = await client.post(url, json=params)
-        except httpx.RequestError as e:
-            raise TelegramNetworkError(f"Network error during request to {method_name}: {e}")
-
-        try:
-            data_json = response.json()
-            logger.debug(f"DEBUG API [{method_name}] Content: {data_json}")
-        except Exception:
-            raise TelegramAPIError("Received an invalid JSON response from the Telegram server.")
-
-        if not isinstance(data_json, dict):
-            if isinstance(data_json, list):
-                return data_json
-            raise TelegramAPIError(f"Received an invalid response format from Telegram: {data_json}")
-
-        if not data_json.get("ok", False):
-            error_code = data_json.get("error_code")
-            description = data_json.get("description", "Unknown error")
-            
-            if error_code == 401:
-                raise TelegramUnauthorizedError(f"Authorization error: {description}", error_code)
-            elif error_code == 400:
-                raise TelegramBadRequestError(f"Bad request: {description}", error_code)
-            else:
-                raise TelegramAPIError(f"API error [{error_code}]: {description}", error_code)
-
-        return data_json.get("result")
-
-    async def download_file(self, file_path: str, destination_path: str) -> None:
-        url = f"{self.file_url}/{file_path}"
-        client = await self.get_client()
-        try:
-            async with client.stream("GET", url) as response:
-                if response.status_code == 200:
-                    with open(destination_path, 'wb') as f:
-                        async for chunk in response.aiter_bytes(chunk_size=8192):
-                            f.write(chunk)
-                else:
-                    raise TelegramAPIError(f"Failed to download file. Status code: {response.status_code}")
-        except httpx.RequestError as e:
-            raise TelegramNetworkError(f"Network error while downloading file: {e}")
-
-    async def start_polling_from(self, router, interval: float = 1.0) -> None:
-        offset = 0
-        bot_username = "Unknown Bot"
-
-        try:
-            me = await self.get_me()
-            if isinstance(me, dict) and "username" in me:
-                bot_username = f"@{me['username']}"
-            elif hasattr(me, "username") and me.username:
-                bot_username = f"@{me.username}"
-        except Exception:
-            pass
-
-        logger.info("\n%s", "-" * 50)
-        logger.info("Bot [%s] started!", bot_username)
-        logger.info("Polling for updates... (Press CTRL+C to stop)")
-        logger.info("%s\n", "-" * 50)
-
-        try:
-            while True:
-                try:
-                    updates = await self.get_updates(offset=offset, timeout=30)
-
-                    if updates:
-                        if not isinstance(updates, list):
-                            updates = [updates]
-
-                        for update in updates:
-                            sub_items = update if isinstance(update, list) else [update]
-
-                            for item in sub_items:
-                                if isinstance(item, dict):
-                                    offset = item.get("update_id", offset) + 1
-                                    await router.feed(item)
-                                elif hasattr(item, "update_id"):
-                                    offset = getattr(item, "update_id", offset) + 1
-                                    await router.feed(item.to_dict() if hasattr(item, "to_dict") else item)
-                                else:
-                                    await router.feed(item)
-
-                except asyncio.CancelledError:
-                    raise
-                except Exception as e:
-                    import traceback
-                    logger.error(f"⚠️ Polling error detail: {e}\n{traceback.format_exc()}")
-
-                await asyncio.sleep(interval)
-        finally:
-            await self.close()
-            logger.info("\n%s", "-" * 50)
-            logger.info("Polling for [@%s] stopped gracefully. Goodbye!", bot_username)
-            logger.info("%s", "-" * 50)
-
+class TelegramBot(BaseBot):
     # --- Telegram API Methods ---
     
-    async def get_updates(self, offset: int | None = None, limit: int | None = None, timeout: int | None = None, allowed_updates: list[str] | None = None) -> list[Update]:
+    async def get_updates(self, offset: int | None = None, limit: int | None = None, timeout: int | None = None, allowed_updates: list[str] | None = None) -> list[dict]:
         """Use this method to receive incoming updates using long polling (wiki). Returns an Array of Update objects."""
         payload = {
             'offset': offset,
@@ -287,7 +140,7 @@ class TelegramBot:
         return await self.request('close', payload)
 
     
-    async def send_message(self, chat_id: int | str, text: str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, parse_mode: str | None = None, entities: list[MessageEntity] | None = None, link_preview_options: LinkPreviewOptions | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_message(self, chat_id: int | str, text: str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, parse_mode: str | None = None, entities: list[MessageEntity] | None = None, link_preview_options: LinkPreviewOptions | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send text messages. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -341,7 +194,7 @@ class TelegramBot:
         return await self.request('forwardMessages', payload)
 
     
-    async def copy_message(self, chat_id: int | str, from_chat_id: int | str, message_id: int, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, video_start_timestamp: int | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> MessageId:
+    async def copy_message(self, chat_id: int | str, from_chat_id: int | str, message_id: int, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, video_start_timestamp: int | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> MessageId:
         """Use this method to copy messages of any kind. Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied. A quiz poll can be copied only if the value of the field correct_option_ids is known to the bot. The method is analogous to the method forwardMessage, but the copied message doesn't have a link to the original message. Returns the MessageId of the sent message on success."""
         payload = {
             'chat_id': chat_id,
@@ -380,7 +233,7 @@ class TelegramBot:
         return await self.request('copyMessages', payload)
 
     
-    async def send_photo(self, chat_id: int | str, photo_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_photo(self, chat_id: int | str, photo_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send photos. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -404,11 +257,10 @@ class TelegramBot:
         files = {
             'photo': photo_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('sendPhoto', payload, files=files if files else None)
+        return await self.request('sendPhoto', payload, files=files)
 
     
-    async def send_live_photo(self, chat_id: int | str, live_photo: InputFile | str, photo_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_live_photo(self, chat_id: int | str, live_photo: InputFile | str, photo_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send live photos. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -433,11 +285,10 @@ class TelegramBot:
         files = {
             'photo': photo_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('sendLivePhoto', payload, files=files if files else None)
+        return await self.request('sendLivePhoto', payload, files=files)
 
     
-    async def send_audio(self, chat_id: int | str, audio_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, duration: int | None = None, performer: str | None = None, title: str | None = None, thumbnail: InputFile | str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_audio(self, chat_id: int | str, audio_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, duration: int | None = None, performer: str | None = None, title: str | None = None, thumbnail: InputFile | str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future. For sending voice messages, use the sendVoice method instead."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -463,11 +314,10 @@ class TelegramBot:
         files = {
             'audio': audio_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('sendAudio', payload, files=files if files else None)
+        return await self.request('sendAudio', payload, files=files)
 
     
-    async def send_document(self, chat_id: int | str, document_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, thumbnail: InputFile | str | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, disable_content_type_detection: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_document(self, chat_id: int | str, document_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, thumbnail: InputFile | str | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, disable_content_type_detection: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -491,11 +341,10 @@ class TelegramBot:
         files = {
             'document': document_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('sendDocument', payload, files=files if files else None)
+        return await self.request('sendDocument', payload, files=files)
 
     
-    async def send_video(self, chat_id: int | str, video_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, duration: int | None = None, width: int | None = None, height: int | None = None, thumbnail: InputFile | str | None = None, cover: InputFile | str | None = None, start_timestamp: int | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None, supports_streaming: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_video(self, chat_id: int | str, video_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, duration: int | None = None, width: int | None = None, height: int | None = None, thumbnail: InputFile | str | None = None, cover: InputFile | str | None = None, start_timestamp: int | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None, supports_streaming: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send video files, Telegram clients support MPEG4 videos (other formats may be sent as Document). On success, the sent Message is returned. Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -526,11 +375,10 @@ class TelegramBot:
         files = {
             'video': video_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('sendVideo', payload, files=files if files else None)
+        return await self.request('sendVideo', payload, files=files)
 
     
-    async def send_animation(self, chat_id: int | str, animation_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, duration: int | None = None, width: int | None = None, height: int | None = None, thumbnail: InputFile | str | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_animation(self, chat_id: int | str, animation_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, duration: int | None = None, width: int | None = None, height: int | None = None, thumbnail: InputFile | str | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, has_spoiler: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned. Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -558,11 +406,10 @@ class TelegramBot:
         files = {
             'animation': animation_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('sendAnimation', payload, files=files if files else None)
+        return await self.request('sendAnimation', payload, files=files)
 
     
-    async def send_voice(self, chat_id: int | str, voice_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, duration: int | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_voice(self, chat_id: int | str, voice_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, duration: int | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message. For this to work, your audio must be in an .OGG file encoded with OPUS, or in .MP3 format, or in .M4A format (other formats may be sent as Audio or Document). On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size, this limit may be changed in the future."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -585,11 +432,10 @@ class TelegramBot:
         files = {
             'voice': voice_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('sendVoice', payload, files=files if files else None)
+        return await self.request('sendVoice', payload, files=files)
 
     
-    async def send_video_note(self, chat_id: int | str, video_note: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, duration: int | None = None, length: int | None = None, thumbnail: InputFile | str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_video_note(self, chat_id: int | str, video_note: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, duration: int | None = None, length: int | None = None, thumbnail: InputFile | str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send a rounded square MPEG4 video of up to 1 minute long. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -612,7 +458,7 @@ class TelegramBot:
         return await self.request('sendVideoNote', payload)
 
     
-    async def send_paid_media(self, chat_id: int | str, star_count: int, media: list[InputPaidMedia], business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, payload: str | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_paid_media(self, chat_id: int | str, star_count: int, media: list[InputPaidMedia], business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, payload: str | None = None, caption: str | None = None, parse_mode: str | None = None, caption_entities: list[MessageEntity] | None = None, show_caption_above_media: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send paid media. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -636,7 +482,7 @@ class TelegramBot:
         return await self.request('sendPaidMedia', payload)
 
     
-    async def send_media_group(self, chat_id: int | str, media: list[InputMediaPhoto] | list[InputMediaVideo] | list[InputMediaLivePhoto] | list[InputMediaAudio] | list[InputMediaDocument], business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, reply_parameters: ReplyParameters | None = None) -> list[Message]:
+    async def send_media_group(self, chat_id: int | str, media: list[InputMediaAudio] | list[InputMediaDocument] | list[InputMediaLivePhoto] | list[InputMediaPhoto] | list[InputMediaVideo], business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, reply_parameters: ReplyParameters | None = None) -> list[Message]:
         """Use this method to send a group of photos, live photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an Array of Message objects that were sent is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -653,7 +499,7 @@ class TelegramBot:
         return await self.request('sendMediaGroup', payload)
 
     
-    async def send_location(self, chat_id: int | str, latitude: float, longitude: float, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, horizontal_accuracy: float | None = None, live_period: int | None = None, heading: int | None = None, proximity_alert_radius: int | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_location(self, chat_id: int | str, latitude: float, longitude: float, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, horizontal_accuracy: float | None = None, live_period: int | None = None, heading: int | None = None, proximity_alert_radius: int | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send point on the map. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -678,7 +524,7 @@ class TelegramBot:
         return await self.request('sendLocation', payload)
 
     
-    async def send_venue(self, chat_id: int | str, latitude: float, longitude: float, title: str, address: str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, foursquare_id: str | None = None, foursquare_type: str | None = None, google_place_id: str | None = None, google_place_type: str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_venue(self, chat_id: int | str, latitude: float, longitude: float, title: str, address: str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, foursquare_id: str | None = None, foursquare_type: str | None = None, google_place_id: str | None = None, google_place_type: str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send information about a venue. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -705,7 +551,7 @@ class TelegramBot:
         return await self.request('sendVenue', payload)
 
     
-    async def send_contact(self, chat_id: int | str, phone_number: str, first_name: str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, last_name: str | None = None, vcard: str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_contact(self, chat_id: int | str, phone_number: str, first_name: str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, last_name: str | None = None, vcard: str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send phone contacts. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -728,7 +574,7 @@ class TelegramBot:
         return await self.request('sendContact', payload)
 
     
-    async def send_poll(self, chat_id: int | str, question: str, options: list[InputPollOption], business_connection_id: str | None = None, message_thread_id: int | None = None, question_parse_mode: str | None = None, question_entities: list[MessageEntity] | None = None, is_anonymous: bool | None = None, type: str | None = None, allows_multiple_answers: bool | None = None, allows_revoting: bool | None = None, shuffle_options: bool | None = None, allow_adding_options: bool | None = None, hide_results_until_closes: bool | None = None, members_only: bool | None = None, country_codes: list[str] | None = None, correct_option_ids: list[int] | None = None, explanation: str | None = None, explanation_parse_mode: str | None = None, explanation_entities: list[MessageEntity] | None = None, explanation_media: InputPollMedia | None = None, open_period: int | None = None, close_date: int | None = None, is_closed: bool | None = None, description: str | None = None, description_parse_mode: str | None = None, description_entities: list[MessageEntity] | None = None, media: InputPollMedia | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_poll(self, chat_id: int | str, question: str, options: list[InputPollOption], business_connection_id: str | None = None, message_thread_id: int | None = None, question_parse_mode: str | None = None, question_entities: list[MessageEntity] | None = None, is_anonymous: bool | None = None, type: str | None = None, allows_multiple_answers: bool | None = None, allows_revoting: bool | None = None, shuffle_options: bool | None = None, allow_adding_options: bool | None = None, hide_results_until_closes: bool | None = None, members_only: bool | None = None, country_codes: list[str] | None = None, correct_option_ids: list[int] | None = None, explanation: str | None = None, explanation_parse_mode: str | None = None, explanation_entities: list[MessageEntity] | None = None, explanation_media: InputPollMedia | None = None, open_period: int | None = None, close_date: int | None = None, is_closed: bool | None = None, description: str | None = None, description_parse_mode: str | None = None, description_entities: list[MessageEntity] | None = None, media: InputPollMedia | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send a native poll. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -784,7 +630,7 @@ class TelegramBot:
         return await self.request('sendChecklist', payload)
 
     
-    async def send_dice(self, chat_id: int | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, emoji: str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_dice(self, chat_id: int | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, emoji: str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send an animated emoji that will display a random value. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -1093,8 +939,7 @@ class TelegramBot:
         files = {
             'photo': photo_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('setChatPhoto', payload, files=files if files else None)
+        return await self.request('setChatPhoto', payload, files=files)
 
     
     async def delete_chat_photo(self, chat_id: int | str) -> bool:
@@ -1492,8 +1337,7 @@ class TelegramBot:
         files = {
             'photo': photo_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('setMyProfilePhoto', payload, files=files if files else None)
+        return await self.request('setMyProfilePhoto', payload, files=files)
 
     
     async def remove_my_profile_photo(self) -> bool:
@@ -1661,8 +1505,7 @@ class TelegramBot:
         files = {
             'photo': photo_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('setBusinessAccountProfilePhoto', payload, files=files if files else None)
+        return await self.request('setBusinessAccountProfilePhoto', payload, files=files)
 
     
     async def remove_business_account_profile_photo(self, business_connection_id: str, is_public: bool | None = None) -> bool:
@@ -2101,7 +1944,7 @@ class TelegramBot:
         return await self.request('deleteAllMessageReactions', payload)
 
     
-    async def send_sticker(self, chat_id: int | str, sticker_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, emoji: str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_sticker(self, chat_id: int | str, sticker_: InputFile | str, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, emoji: str | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send static .WEBP, animated .TGS, or video .WEBM stickers. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,
@@ -2121,8 +1964,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('sendSticker', payload, files=files if files else None)
+        return await self.request('sendSticker', payload, files=files)
 
     
     async def get_sticker_set(self, name: str) -> StickerSet:
@@ -2150,8 +1992,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('uploadStickerFile', payload, files=files if files else None)
+        return await self.request('uploadStickerFile', payload, files=files)
 
     
     async def create_new_sticker_set(self, user_id: int, name: str, title: str, stickers: list[InputSticker], sticker_type: str | None = None, needs_repainting: bool | None = None) -> bool:
@@ -2176,8 +2017,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('addStickerToSet', payload, files=files if files else None)
+        return await self.request('addStickerToSet', payload, files=files)
 
     
     async def set_sticker_position_in_set(self, sticker_: str, position: int) -> bool:
@@ -2188,8 +2028,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('setStickerPositionInSet', payload, files=files if files else None)
+        return await self.request('setStickerPositionInSet', payload, files=files)
 
     
     async def delete_sticker_from_set(self, sticker_: str) -> bool:
@@ -2199,8 +2038,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('deleteStickerFromSet', payload, files=files if files else None)
+        return await self.request('deleteStickerFromSet', payload, files=files)
 
     
     async def replace_sticker_in_set(self, user_id: int, name: str, old_sticker: str, sticker_: InputSticker) -> bool:
@@ -2213,8 +2051,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('replaceStickerInSet', payload, files=files if files else None)
+        return await self.request('replaceStickerInSet', payload, files=files)
 
     
     async def set_sticker_emoji_list(self, sticker_: str, emoji_list: list[str]) -> bool:
@@ -2225,8 +2062,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('setStickerEmojiList', payload, files=files if files else None)
+        return await self.request('setStickerEmojiList', payload, files=files)
 
     
     async def set_sticker_keywords(self, sticker_: str, keywords: list[str] | None = None) -> bool:
@@ -2237,8 +2073,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('setStickerKeywords', payload, files=files if files else None)
+        return await self.request('setStickerKeywords', payload, files=files)
 
     
     async def set_sticker_mask_position(self, sticker_: str, mask_position: MaskPosition | None = None) -> bool:
@@ -2249,8 +2084,7 @@ class TelegramBot:
         files = {
             'sticker': sticker_,
         }
-        files = {k: v for k, v in files.items() if v is not None}
-        return await self.request('setStickerMaskPosition', payload, files=files if files else None)
+        return await self.request('setStickerMaskPosition', payload, files=files)
 
     
     async def set_sticker_set_title(self, name: str, title: str) -> bool:
@@ -2290,7 +2124,7 @@ class TelegramBot:
         return await self.request('deleteStickerSet', payload)
 
     
-    async def send_rich_message(self, chat_id: int | str, rich_message: InputRichMessage, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: ReplyKeyboardMarkup | ForceReply | ReplyKeyboardRemove | InlineKeyboardMarkup | None = None) -> Message:
+    async def send_rich_message(self, chat_id: int | str, rich_message: InputRichMessage, business_connection_id: str | None = None, message_thread_id: int | None = None, direct_messages_topic_id: int | None = None, ephemeral_message_parameters: EphemeralMessageParameters | None = None, disable_notification: bool | None = None, protect_content: bool | None = None, allow_paid_broadcast: bool | None = None, message_effect_id: str | None = None, suggested_post_parameters: SuggestedPostParameters | None = None, reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply | None = None) -> Message:
         """Use this method to send rich messages. If the message contains a block with a media element, then the bot must have the right to send the media to the chat. On success, the sent Message is returned."""
         payload = {
             'business_connection_id': business_connection_id,

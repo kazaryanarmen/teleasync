@@ -49,5 +49,5 @@ class MessageReactionCountUpdated:
             chat=Chat.from_dict(data.get('chat')),
             message_id=data.get('message_id'),
             date=data.get('date'),
-            reactions=[ReactionCount.from_dict(i) for i in data.get('reactions')] if data.get('reactions') else None,
+            reactions=[ReactionCount.from_dict(i1) for i1 in data.get('reactions')] if data.get('reactions') else None,
         )

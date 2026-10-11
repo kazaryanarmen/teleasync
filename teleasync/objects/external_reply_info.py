@@ -57,22 +57,22 @@ if TYPE_CHECKING:
 class ExternalReplyInfo:
     """This object contains information about a message that is being replied to, which may come from another chat or forum topic."""
 
-    def __init__(self, origin: MessageOrigin, chat: Chat | None = None, message_id: int | None = None, link_preview_options: LinkPreviewOptions | None = None, animation_: Animation | None = None, audio_: Audio | None = None, document_: Document | None = None, live_photo: LivePhoto | None = None, paid_media: PaidMediaInfo | None = None, photo_: list[PhotoSize] | None = None, sticker_: Sticker | None = None, story: Story | None = None, video_: Video | None = None, video_note: VideoNote | None = None, voice_: Voice | None = None, has_media_spoiler: bool | None = None, checklist: Checklist | None = None, contact: Contact | None = None, dice: Dice | None = None, game: Game | None = None, giveaway: Giveaway | None = None, giveaway_winners: GiveawayWinners | None = None, invoice: Invoice | None = None, location: Location | None = None, poll: Poll | None = None, venue: Venue | None = None):
+    def __init__(self, origin: MessageOrigin, chat: Chat | None = None, message_id: int | None = None, link_preview_options: LinkPreviewOptions | None = None, animation: Animation | None = None, audio: Audio | None = None, document: Document | None = None, live_photo: LivePhoto | None = None, paid_media: PaidMediaInfo | None = None, photo: list[PhotoSize] | None = None, sticker: Sticker | None = None, story: Story | None = None, video: Video | None = None, video_note: VideoNote | None = None, voice: Voice | None = None, has_media_spoiler: bool | None = None, checklist: Checklist | None = None, contact: Contact | None = None, dice: Dice | None = None, game: Game | None = None, giveaway: Giveaway | None = None, giveaway_winners: GiveawayWinners | None = None, invoice: Invoice | None = None, location: Location | None = None, poll: Poll | None = None, venue: Venue | None = None):
         self.origin: MessageOrigin = origin
         self.chat: Chat | None = chat
         self.message_id: int | None = message_id
         self.link_preview_options: LinkPreviewOptions | None = link_preview_options
-        self.animation_: Animation | None = animation_
-        self.audio_: Audio | None = audio_
-        self.document_: Document | None = document_
+        self.animation: Animation | None = animation
+        self.audio: Audio | None = audio
+        self.document: Document | None = document
         self.live_photo: LivePhoto | None = live_photo
         self.paid_media: PaidMediaInfo | None = paid_media
-        self.photo_: list[PhotoSize] | None = photo_
-        self.sticker_: Sticker | None = sticker_
+        self.photo: list[PhotoSize] | None = photo
+        self.sticker: Sticker | None = sticker
         self.story: Story | None = story
-        self.video_: Video | None = video_
+        self.video: Video | None = video
         self.video_note: VideoNote | None = video_note
-        self.voice_: Voice | None = voice_
+        self.voice: Voice | None = voice
         self.has_media_spoiler: bool | None = has_media_spoiler
         self.checklist: Checklist | None = checklist
         self.contact: Contact | None = contact
@@ -103,28 +103,28 @@ class ExternalReplyInfo:
             result['message_id'] = _serialize(self.message_id)
         if self.link_preview_options is not None:
             result['link_preview_options'] = _serialize(self.link_preview_options)
-        if self.animation_ is not None:
-            result['animation'] = _serialize(self.animation_)
-        if self.audio_ is not None:
-            result['audio'] = _serialize(self.audio_)
-        if self.document_ is not None:
-            result['document'] = _serialize(self.document_)
+        if self.animation is not None:
+            result['animation'] = _serialize(self.animation)
+        if self.audio is not None:
+            result['audio'] = _serialize(self.audio)
+        if self.document is not None:
+            result['document'] = _serialize(self.document)
         if self.live_photo is not None:
             result['live_photo'] = _serialize(self.live_photo)
         if self.paid_media is not None:
             result['paid_media'] = _serialize(self.paid_media)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
-        if self.sticker_ is not None:
-            result['sticker'] = _serialize(self.sticker_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
+        if self.sticker is not None:
+            result['sticker'] = _serialize(self.sticker)
         if self.story is not None:
             result['story'] = _serialize(self.story)
-        if self.video_ is not None:
-            result['video'] = _serialize(self.video_)
+        if self.video is not None:
+            result['video'] = _serialize(self.video)
         if self.video_note is not None:
             result['video_note'] = _serialize(self.video_note)
-        if self.voice_ is not None:
-            result['voice'] = _serialize(self.voice_)
+        if self.voice is not None:
+            result['voice'] = _serialize(self.voice)
         if self.has_media_spoiler is not None:
             result['has_media_spoiler'] = _serialize(self.has_media_spoiler)
         if self.checklist is not None:
@@ -182,17 +182,17 @@ class ExternalReplyInfo:
             chat=Chat.from_dict(data.get('chat')),
             message_id=data.get('message_id'),
             link_preview_options=LinkPreviewOptions.from_dict(data.get('link_preview_options')),
-            animation_=Animation.from_dict(data.get('animation')),
-            audio_=Audio.from_dict(data.get('audio')),
-            document_=Document.from_dict(data.get('document')),
+            animation=Animation.from_dict(data.get('animation')),
+            audio=Audio.from_dict(data.get('audio')),
+            document=Document.from_dict(data.get('document')),
             live_photo=LivePhoto.from_dict(data.get('live_photo')),
             paid_media=PaidMediaInfo.from_dict(data.get('paid_media')),
-            photo_=[PhotoSize.from_dict(i) for i in data.get('photo')] if data.get('photo') else None,
-            sticker_=Sticker.from_dict(data.get('sticker')),
+            photo=[PhotoSize.from_dict(i1) for i1 in data.get('photo')] if data.get('photo') else None,
+            sticker=Sticker.from_dict(data.get('sticker')),
             story=Story.from_dict(data.get('story')),
-            video_=Video.from_dict(data.get('video')),
+            video=Video.from_dict(data.get('video')),
             video_note=VideoNote.from_dict(data.get('video_note')),
-            voice_=Voice.from_dict(data.get('voice')),
+            voice=Voice.from_dict(data.get('voice')),
             has_media_spoiler=data.get('has_media_spoiler'),
             checklist=Checklist.from_dict(data.get('checklist')),
             contact=Contact.from_dict(data.get('contact')),

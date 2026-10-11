@@ -88,7 +88,7 @@ class OwnedGiftRegular:
             owned_gift_id=data.get('owned_gift_id'),
             sender_user=User.from_dict(data.get('sender_user')),
             text=data.get('text'),
-            entities=[MessageEntity.from_dict(i) for i in data.get('entities')] if data.get('entities') else None,
+            entities=[MessageEntity.from_dict(i1) for i1 in data.get('entities')] if data.get('entities') else None,
             is_private=data.get('is_private'),
             is_saved=data.get('is_saved'),
             can_be_upgraded=data.get('can_be_upgraded'),

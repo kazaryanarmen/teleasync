@@ -2,13 +2,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 
+if TYPE_CHECKING:
+    
+    from .input_file import InputFile
+    
+
 
 class InputProfilePhotoAnimated:
     """An animated profile photo in the MPEG4 format."""
 
-    def __init__(self, type: str, animation_: str, main_frame_timestamp: float | None = None):
+    def __init__(self, type: str, animation: InputFile | str, main_frame_timestamp: float | None = None):
         self.type: str = type
-        self.animation_: str = animation_
+        self.animation: InputFile | str = animation
         self.main_frame_timestamp: float | None = main_frame_timestamp
 
     def to_dict(self) -> dict:
@@ -23,8 +28,8 @@ class InputProfilePhotoAnimated:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.animation_ is not None:
-            result['animation'] = _serialize(self.animation_)
+        if self.animation is not None:
+            result['animation'] = _serialize(self.animation)
         if self.main_frame_timestamp is not None:
             result['main_frame_timestamp'] = _serialize(self.main_frame_timestamp)
         return result
@@ -33,8 +38,9 @@ class InputProfilePhotoAnimated:
     def from_dict(cls, data: dict | None) -> 'InputProfilePhotoAnimated' | None:
         if not data:
             return None
+        from .input_file import InputFile
         return cls(
             type=data.get('type'),
-            animation_=data.get('animation'),
+            animation=data.get('animation'),
             main_frame_timestamp=data.get('main_frame_timestamp'),
         )

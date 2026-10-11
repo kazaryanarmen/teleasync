@@ -44,6 +44,6 @@ class RichBlockSlideshow:
         from .rich_block_caption import RichBlockCaption
         return cls(
             type=data.get('type'),
-            blocks=[RichBlock.from_dict(i) for i in data.get('blocks')] if data.get('blocks') else None,
+            blocks=[RichBlock.from_dict(i1) for i1 in data.get('blocks')] if data.get('blocks') else None,
             caption=RichBlockCaption.from_dict(data.get('caption')),
         )

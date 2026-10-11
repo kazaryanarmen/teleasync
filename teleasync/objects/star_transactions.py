@@ -34,5 +34,5 @@ class StarTransactions:
             return None
         from .star_transaction import StarTransaction
         return cls(
-            transactions=[StarTransaction.from_dict(i) for i in data.get('transactions')] if data.get('transactions') else None,
+            transactions=[StarTransaction.from_dict(i1) for i1 in data.get('transactions')] if data.get('transactions') else None,
         )

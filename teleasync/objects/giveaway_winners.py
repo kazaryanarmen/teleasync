@@ -74,7 +74,7 @@ class GiveawayWinners:
             giveaway_message_id=data.get('giveaway_message_id'),
             winners_selection_date=data.get('winners_selection_date'),
             winner_count=data.get('winner_count'),
-            winners=[User.from_dict(i) for i in data.get('winners')] if data.get('winners') else None,
+            winners=[User.from_dict(i1) for i1 in data.get('winners')] if data.get('winners') else None,
             additional_chat_count=data.get('additional_chat_count'),
             prize_star_count=data.get('prize_star_count'),
             premium_subscription_month_count=data.get('premium_subscription_month_count'),

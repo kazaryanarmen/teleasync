@@ -50,7 +50,7 @@ class RichBlockListItem:
         from .rich_block import RichBlock
         return cls(
             label=data.get('label'),
-            blocks=[RichBlock.from_dict(i) for i in data.get('blocks')] if data.get('blocks') else None,
+            blocks=[RichBlock.from_dict(i1) for i1 in data.get('blocks')] if data.get('blocks') else None,
             has_checkbox=data.get('has_checkbox'),
             is_checked=data.get('is_checked'),
             value=data.get('value'),

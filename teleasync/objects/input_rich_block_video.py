@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 class InputRichBlockVideo:
     """A block with a video, corresponding to the HTML tag <video>."""
 
-    def __init__(self, type: str, video_: InputMediaVideo, caption: RichBlockCaption | None = None):
+    def __init__(self, type: str, video: InputMediaVideo, caption: RichBlockCaption | None = None):
         self.type: str = type
-        self.video_: InputMediaVideo = video_
+        self.video: InputMediaVideo = video
         self.caption: RichBlockCaption | None = caption
 
     def to_dict(self) -> dict:
@@ -30,8 +30,8 @@ class InputRichBlockVideo:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.video_ is not None:
-            result['video'] = _serialize(self.video_)
+        if self.video is not None:
+            result['video'] = _serialize(self.video)
         if self.caption is not None:
             result['caption'] = _serialize(self.caption)
         return result
@@ -44,6 +44,6 @@ class InputRichBlockVideo:
         from .rich_block_caption import RichBlockCaption
         return cls(
             type=data.get('type'),
-            video_=InputMediaVideo.from_dict(data.get('video')),
+            video=InputMediaVideo.from_dict(data.get('video')),
             caption=RichBlockCaption.from_dict(data.get('caption')),
         )

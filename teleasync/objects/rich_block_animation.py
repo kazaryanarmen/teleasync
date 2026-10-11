@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 class RichBlockAnimation:
     """A block with an animation, corresponding to the HTML tag <video>."""
 
-    def __init__(self, type: str, animation_: Animation, has_spoiler: bool | None = None, caption: RichBlockCaption | None = None):
+    def __init__(self, type: str, animation: Animation, has_spoiler: bool | None = None, caption: RichBlockCaption | None = None):
         self.type: str = type
-        self.animation_: Animation = animation_
+        self.animation: Animation = animation
         self.has_spoiler: bool | None = has_spoiler
         self.caption: RichBlockCaption | None = caption
 
@@ -31,8 +31,8 @@ class RichBlockAnimation:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.animation_ is not None:
-            result['animation'] = _serialize(self.animation_)
+        if self.animation is not None:
+            result['animation'] = _serialize(self.animation)
         if self.has_spoiler is not None:
             result['has_spoiler'] = _serialize(self.has_spoiler)
         if self.caption is not None:
@@ -47,7 +47,7 @@ class RichBlockAnimation:
         from .rich_block_caption import RichBlockCaption
         return cls(
             type=data.get('type'),
-            animation_=Animation.from_dict(data.get('animation')),
+            animation=Animation.from_dict(data.get('animation')),
             has_spoiler=data.get('has_spoiler'),
             caption=RichBlockCaption.from_dict(data.get('caption')),
         )

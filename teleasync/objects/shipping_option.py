@@ -42,5 +42,5 @@ class ShippingOption:
         return cls(
             id=data.get('id'),
             title=data.get('title'),
-            prices=[LabeledPrice.from_dict(i) for i in data.get('prices')] if data.get('prices') else None,
+            prices=[LabeledPrice.from_dict(i1) for i1 in data.get('prices')] if data.get('prices') else None,
         )

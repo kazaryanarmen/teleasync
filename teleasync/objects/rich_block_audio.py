@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 class RichBlockAudio:
     """A block with a music file, corresponding to the HTML tag <audio>."""
 
-    def __init__(self, type: str, audio_: Audio, caption: RichBlockCaption | None = None):
+    def __init__(self, type: str, audio: Audio, caption: RichBlockCaption | None = None):
         self.type: str = type
-        self.audio_: Audio = audio_
+        self.audio: Audio = audio
         self.caption: RichBlockCaption | None = caption
 
     def to_dict(self) -> dict:
@@ -30,8 +30,8 @@ class RichBlockAudio:
         result = {}
         if self.type is not None:
             result['type'] = _serialize(self.type)
-        if self.audio_ is not None:
-            result['audio'] = _serialize(self.audio_)
+        if self.audio is not None:
+            result['audio'] = _serialize(self.audio)
         if self.caption is not None:
             result['caption'] = _serialize(self.caption)
         return result
@@ -44,6 +44,6 @@ class RichBlockAudio:
         from .rich_block_caption import RichBlockCaption
         return cls(
             type=data.get('type'),
-            audio_=Audio.from_dict(data.get('audio')),
+            audio=Audio.from_dict(data.get('audio')),
             caption=RichBlockCaption.from_dict(data.get('caption')),
         )

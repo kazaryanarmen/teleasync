@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 class InputRichBlockTable:
     """A table, corresponding to the HTML tag <table>."""
 
-    def __init__(self, type: str, cells: list[RichBlockTableCell], is_bordered: bool | None = None, is_striped: bool | None = None, is_compact: bool | None = None, caption: RichText | None = None):
+    def __init__(self, type: str, cells: list[list[RichBlockTableCell]], is_bordered: bool | None = None, is_striped: bool | None = None, is_compact: bool | None = None, caption: RichText | None = None):
         self.type: str = type
-        self.cells: list[RichBlockTableCell] = cells
+        self.cells: list[list[RichBlockTableCell]] = cells
         self.is_bordered: bool | None = is_bordered
         self.is_striped: bool | None = is_striped
         self.is_compact: bool | None = is_compact
@@ -53,7 +53,7 @@ class InputRichBlockTable:
         from .rich_text import RichText
         return cls(
             type=data.get('type'),
-            cells=[RichBlockTableCell.from_dict(i) for i in data.get('cells')] if data.get('cells') else None,
+            cells=[[RichBlockTableCell.from_dict(i1) for i1 in i2] for i2 in data.get('cells')] if data.get('cells') else None,
             is_bordered=data.get('is_bordered'),
             is_striped=data.get('is_striped'),
             is_compact=data.get('is_compact'),

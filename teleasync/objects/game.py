@@ -15,13 +15,13 @@ if TYPE_CHECKING:
 class Game:
     """This object represents a game. Use BotFather to create and edit games, their short names will act as unique identifiers."""
 
-    def __init__(self, title: str, description: str, photo_: list[PhotoSize], text: str | None = None, text_entities: list[MessageEntity] | None = None, animation_: Animation | None = None):
+    def __init__(self, title: str, description: str, photo: list[PhotoSize], text: str | None = None, text_entities: list[MessageEntity] | None = None, animation: Animation | None = None):
         self.title: str = title
         self.description: str = description
-        self.photo_: list[PhotoSize] = photo_
+        self.photo: list[PhotoSize] = photo
         self.text: str | None = text
         self.text_entities: list[MessageEntity] | None = text_entities
-        self.animation_: Animation | None = animation_
+        self.animation: Animation | None = animation
 
     def to_dict(self) -> dict:
         def _serialize(v):
@@ -37,14 +37,14 @@ class Game:
             result['title'] = _serialize(self.title)
         if self.description is not None:
             result['description'] = _serialize(self.description)
-        if self.photo_ is not None:
-            result['photo'] = _serialize(self.photo_)
+        if self.photo is not None:
+            result['photo'] = _serialize(self.photo)
         if self.text is not None:
             result['text'] = _serialize(self.text)
         if self.text_entities is not None:
             result['text_entities'] = _serialize(self.text_entities)
-        if self.animation_ is not None:
-            result['animation'] = _serialize(self.animation_)
+        if self.animation is not None:
+            result['animation'] = _serialize(self.animation)
         return result
 
     @classmethod
@@ -57,8 +57,8 @@ class Game:
         return cls(
             title=data.get('title'),
             description=data.get('description'),
-            photo_=[PhotoSize.from_dict(i) for i in data.get('photo')] if data.get('photo') else None,
+            photo=[PhotoSize.from_dict(i1) for i1 in data.get('photo')] if data.get('photo') else None,
             text=data.get('text'),
-            text_entities=[MessageEntity.from_dict(i) for i in data.get('text_entities')] if data.get('text_entities') else None,
-            animation_=Animation.from_dict(data.get('animation')),
+            text_entities=[MessageEntity.from_dict(i1) for i1 in data.get('text_entities')] if data.get('text_entities') else None,
+            animation=Animation.from_dict(data.get('animation')),
         )
