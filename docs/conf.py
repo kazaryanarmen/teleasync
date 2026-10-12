@@ -42,3 +42,5 @@ myst_enable_extensions = ["colon_fence", "deflist"]
 html_theme = "furo"
 html_static_path = ["_static"]
 html_title = f"{project} {release}"
+
+suppress_warnings = ["myst.header"]
