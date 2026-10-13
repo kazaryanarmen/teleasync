@@ -50,3 +50,5 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+or the example is available in the `teleasync_bot/` folder in the [GitHub](https://github.com/kazaryanarmen/teleasync) repository.
